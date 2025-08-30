@@ -43,7 +43,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
               {showSidebar && <Sidebar>
                 <MainSidebarNav />
               </Sidebar>}
-              <div className="flex-1 flex justify-center">
+              <div className="flex-1 flex">
                   <div className="w-full">
                     {children}
                   </div>
