@@ -1,17 +1,19 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { PostCard } from "@/components/chirpstream/post-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPosts, getUserById, getUsers } from "@/lib/data";
-import type { User } from "@/lib/types";
+import type { Post, User } from "@/lib/types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
-
-type SearchPageProps = {
-  searchParams: {
-    q?: string;
-  };
-};
+import { useAuth } from "@/context/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import ProtectedRoute from "@/components/auth/protected-route";
 
 function UserResultCard({ user }: { user: User }) {
   return (
@@ -33,32 +35,71 @@ function UserResultCard({ user }: { user: User }) {
   );
 }
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams.q || "";
-  const allPosts = await getPosts();
-  const allUsers = await getUsers();
+function SearchSkeleton() {
+    return (
+        <div>
+            <div className="space-y-2 mb-4">
+                <Skeleton className="h-8 w-1/4" />
+                <Skeleton className="h-10 w-1/2" />
+            </div>
+            <div className="flex flex-col gap-4 mt-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+            </div>
+        </div>
+    )
+}
 
-  const filteredPosts = query ? allPosts.filter(post =>
-    post.content.toLowerCase().includes(query.toLowerCase())
-  ) : [];
+function SearchPageContent() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q') || "";
+  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const { user: authUser, loading: authLoading } = useAuth();
 
-  const filteredUsers = query ? allUsers.filter(user =>
-    user.name.toLowerCase().includes(query.toLowerCase()) ||
-    user.username.toLowerCase().includes(query.toLowerCase())
-  ) : [];
+  useEffect(() => {
+    async function fetchResults() {
+        if (!query || !authUser) return;
+        setLoading(true);
+        const allPosts = await getPosts();
+        const allUsers = await getUsers();
+
+        const filteredPosts = allPosts.filter(post =>
+            post.content.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        const filteredUsers = allUsers.filter(user =>
+            user.name.toLowerCase().includes(query.toLowerCase()) ||
+            user.username.toLowerCase().includes(query.toLowerCase())
+        );
+
+        setPosts(filteredPosts);
+        setUsers(filteredUsers);
+        setLoading(false);
+    }
+    if (!authLoading) {
+      fetchResults();
+    }
+  }, [query, authUser, authLoading]);
+
+  if (loading || authLoading) {
+      return <SearchSkeleton />;
+  }
 
   return (
     <div className="p-4 md:p-6">
       <h1 className="text-2xl font-bold">Search results for "{query}"</h1>
       <Tabs defaultValue="posts" className="mt-4">
         <TabsList>
-          <TabsTrigger value="posts">Posts ({filteredPosts.length})</TabsTrigger>
-          <TabsTrigger value="users">Users ({filteredUsers.length})</TabsTrigger>
+          <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>
+          <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="posts">
           <div className="flex flex-col gap-6 mt-4">
-            {filteredPosts.length > 0 ? (
-              filteredPosts.map(async post => {
+            {posts.length > 0 ? (
+              posts.map(async post => {
                 const author = await getUserById(post.authorId);
                 if (!author) return null;
                 return <PostCard key={post.id} post={post} author={author} />;
@@ -70,8 +111,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </TabsContent>
         <TabsContent value="users">
           <div className="flex flex-col gap-4 mt-4">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map(user => <UserResultCard key={user.id} user={user} />)
+            {users.length > 0 ? (
+              users.map(user => <UserResultCard key={user.id} user={user} />)
             ) : (
               <p className="text-muted-foreground text-center py-8">No users found.</p>
             )}
@@ -80,4 +121,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </Tabs>
     </div>
   );
+}
+
+export default function SearchPage() {
+    return (
+        <ProtectedRoute>
+            <SearchPageContent />
+        </ProtectedRoute>
+    )
 }
