@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { currentUser } from "@/lib/data";
 import type { User } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
 
 type UserProfileCardProps = {
   user: User;
@@ -12,8 +12,11 @@ type UserProfileCardProps = {
 };
 
 export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
-  const isCurrentUser = user.id === currentUser.id;
-  const initialIsFollowing = currentUser.following.includes(user.id);
+  const { user: currentUser } = useAuth();
+  const isCurrentUser = user.id === currentUser?.uid;
+
+  // In a real app, this would come from the current user's data
+  const initialIsFollowing = false;
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
   const toggleFollow = () => {

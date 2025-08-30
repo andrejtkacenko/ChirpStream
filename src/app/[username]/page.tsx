@@ -11,13 +11,13 @@ type ProfilePageProps = {
   };
 };
 
-export default function ProfilePage({ params }: ProfilePageProps) {
-  const user = getUserByUsername(params.username);
+export default async function ProfilePage({ params }: ProfilePageProps) {
+  const user = await getUserByUsername(params.username);
   if (!user) {
     notFound();
   }
 
-  const userPosts = getPostsByAuthor(user.id);
+  const userPosts = await getPostsByAuthor(user.id);
 
   return (
     <div className="p-4 md:p-6">

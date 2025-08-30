@@ -2,13 +2,30 @@ import { CreatePostForm } from "@/components/chirpstream/create-post-form";
 import { PostCard } from "@/components/chirpstream/post-card";
 import { RightSidebar } from "@/components/layout/right-sidebar";
 import { Separator } from "@/components/ui/separator";
-import { currentUser, getPosts, getUserById } from "@/lib/data";
+import { getPosts, getUserById, getUserByUsername } from "@/lib/data";
 import type { Post } from "@/lib/types";
 import ProtectedRoute from "@/components/auth/protected-route";
+import { auth } from "@/lib/firebase";
+import { AuthProvider, useAuth } from "@/context/auth-context";
 
-export default function Home() {
+// Note: This is a placeholder for the current user.
+// In a real app, you would get this from your auth provider.
+const getCurrentUser = async () => {
+  // This is a mock, replace with your actual user fetching logic
+  return await getUserByUsername("alice");
+};
+
+
+export default async function Home() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return <ProtectedRoute><p>Please log in.</p></ProtectedRoute>;
+  }
+
   const followedUserIds = currentUser.following;
-  const feedPosts = getPosts().filter(post => followedUserIds.includes(post.authorId) || post.authorId === currentUser.id);
+  const allPosts = await getPosts();
+  
+  const feedPosts = allPosts.filter(post => followedUserIds.includes(post.authorId) || post.authorId === currentUser.id);
 
   return (
     <ProtectedRoute>
@@ -18,8 +35,8 @@ export default function Home() {
           <CreatePostForm />
           <Separator className="my-6" />
           <div className="flex flex-col gap-6">
-            {feedPosts.map((post: Post) => {
-              const author = getUserById(post.authorId);
+            {feedPosts.map(async (post: Post) => {
+              const author = await getUserById(post.authorId);
               if (!author) return null;
               return <PostCard key={post.id} post={post} author={author} />;
             })}

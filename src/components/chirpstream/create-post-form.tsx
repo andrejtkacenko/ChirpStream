@@ -1,14 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { currentUser } from "@/lib/data";
+import { useAuth } from "@/context/auth-context";
+
 
 export function CreatePostForm() {
+  const { user } = useAuth();
+
   return (
     <div className="flex gap-4">
       <Avatar>
-        <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+        <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? ""} />
+        <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
       </Avatar>
       <div className="w-full">
         <Textarea

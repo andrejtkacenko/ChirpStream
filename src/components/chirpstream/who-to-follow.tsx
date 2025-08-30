@@ -2,23 +2,42 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { currentUser, getUsers } from "@/lib/data";
+import { getUsers } from "@/lib/data";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { User } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
 
 export function WhoToFollow() {
-  const allUsers = getUsers();
-  const usersToFollow = allUsers.filter(
-    (user) => user.id !== currentUser.id && !currentUser.following.includes(user.id)
-  ).slice(0, 3);
-  
+  const { user: currentUser } = useAuth();
+  const [usersToFollow, setUsersToFollow] = useState<User[]>([]);
   const [followed, setFollowed] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const allUsers = await getUsers();
+      // In a real app, you'd also get the current user's following list
+      const filteredUsers = allUsers.filter(
+        (user) => user.id !== currentUser?.uid
+      ).slice(0, 3);
+      setUsersToFollow(filteredUsers);
+    };
+
+    if(currentUser) {
+      fetchUsers();
+    }
+  }, [currentUser]);
+
 
   const toggleFollow = (userId: string) => {
     setFollowed(prev => 
       prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
     );
   };
+
+  if (!usersToFollow.length) {
+    return <p className="text-sm text-muted-foreground">No users to suggest.</p>;
+  }
 
   return (
     <div className="flex flex-col gap-4">

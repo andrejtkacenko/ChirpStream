@@ -33,10 +33,10 @@ function UserResultCard({ user }: { user: User }) {
   );
 }
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
+export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = searchParams.q || "";
-  const allPosts = getPosts();
-  const allUsers = getUsers();
+  const allPosts = await getPosts();
+  const allUsers = await getUsers();
 
   const filteredPosts = query ? allPosts.filter(post =>
     post.content.toLowerCase().includes(query.toLowerCase())
@@ -58,8 +58,8 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
         <TabsContent value="posts">
           <div className="flex flex-col gap-6 mt-4">
             {filteredPosts.length > 0 ? (
-              filteredPosts.map(post => {
-                const author = getUserById(post.authorId);
+              filteredPosts.map(async post => {
+                const author = await getUserById(post.authorId);
                 if (!author) return null;
                 return <PostCard key={post.id} post={post} author={author} />;
               })

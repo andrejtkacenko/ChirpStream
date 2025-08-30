@@ -2,57 +2,57 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { getUserByUsername } from '@/lib/data';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import type { User } from '@/lib/types';
 
-interface AppUser {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  username: string;
-}
 
 interface AuthContextType {
-  user: AppUser | null;
+  user: FirebaseUser | null;
+  appUser: User | null;
   loading: boolean;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
+    const userRef = doc(db, "users", firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+        return { id: userSnap.id, ...userSnap.data() } as User;
+    } else {
+        const username = firebaseUser.email?.split('@')[0] || `user${Math.random().toString(36).substring(2, 8)}`;
+        const newUser: User = {
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || "New User",
+            username: username,
+            avatar: firebaseUser.photoURL || `https://picsum.photos/seed/${username}/100/100`,
+            bio: "Just joined ChirpStream!",
+            following: [],
+            followers: [],
+        };
+        await setDoc(userRef, newUser);
+        return newUser;
+    }
+}
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [appUser, setAppUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // In a real app, you'd fetch the user profile from your database
-        // For this demo, we'll try to find a mock user or create a new one
-        const username = firebaseUser.email?.split('@')[0] || 'newuser';
-        let appUser = getUserByUsername(username);
-
-        if (appUser) {
-            setUser({
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                displayName: appUser.name,
-                photoURL: appUser.avatar,
-                username: appUser.username,
-            });
-        } else {
-             // Fallback for demonstration if no specific user is matched
-             setUser({
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                displayName: firebaseUser.displayName || 'New User',
-                photoURL: firebaseUser.photoURL,
-                username: username
-            });
-        }
+        setUser(firebaseUser);
+        const appUserData = await getOrCreateAppUser(firebaseUser);
+        setAppUser(appUserData);
       } else {
         setUser(null);
+        setAppUser(null);
       }
       setLoading(false);
     });
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(auth);
   };
 
-  const value = { user, loading, logout };
+  const value = { user, appUser, loading, logout };
 
   return (
     <AuthContext.Provider value={value}>

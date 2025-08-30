@@ -18,16 +18,16 @@ import { useAuth } from '@/context/auth-context'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
-  const { user, loading, logout } = useAuth();
+  const { appUser, loading, logout } = useAuth();
 
   const isActive = (path: string) => pathname === path
 
-  const menuItems = user ? [
+  const menuItems = appUser ? [
     { href: '/', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: Search },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/messages', label: 'Messages', icon: Mail },
-    { href: `/${user.username}`, label: 'Profile', icon: User },
+    { href: `/${appUser.username}`, label: 'Profile', icon: User },
   ] : [];
 
   return (
@@ -42,7 +42,7 @@ export function MainSidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {user && menuItems.map((item) => (
+          {appUser && menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <Link href={item.href}>
                 <SidebarMenuButton
@@ -56,7 +56,7 @@ export function MainSidebarNav() {
               </Link>
             </SidebarMenuItem>
           ))}
-          {!user && !loading && (
+          {!appUser && !loading && (
              <SidebarMenuItem>
               <Link href="/login">
                 <SidebarMenuButton
@@ -73,26 +73,26 @@ export function MainSidebarNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        {user && (
+        {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start h-14">
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? ''} />
-                      <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                      <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
+                      <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="text-left hidden group-data-[state=expanded]:block">
-                      <p className="font-bold">{user.displayName}</p>
-                      <p className="text-sm text-muted-foreground">@{user.username}</p>
+                      <p className="font-bold">{appUser.name}</p>
+                      <p className="text-sm text-muted-foreground">@{appUser.username}</p>
                     </div>
                   </div>
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
-              <DropdownMenuItem onClick={logout}>Log out @{user.username}</DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>Log out @{appUser.username}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
