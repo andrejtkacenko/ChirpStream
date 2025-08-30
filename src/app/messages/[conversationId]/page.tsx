@@ -84,13 +84,29 @@ function ConversationPageContent() {
     
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !appUser || !conversationId) return;
+        const content = newMessage.trim();
+        if (!content || !appUser || !conversationId) return;
+        
         setIsSending(true);
+        setNewMessage("");
+
+        const optimisticMessage: Message = {
+            id: Date.now().toString(),
+            conversationId: conversationId as string,
+            senderId: appUser.id,
+            text: content,
+            createdAt: new Date().toISOString(),
+            sender: appUser,
+        }
+
+        setMessages(prevMessages => [...prevMessages, optimisticMessage]);
+
         try {
-            await sendMessage(conversationId as string, appUser.id, newMessage.trim());
-            setNewMessage("");
+            await sendMessage(conversationId as string, appUser.id, content);
         } catch (error) {
             console.error("Failed to send message:", error);
+            // Optional: remove optimistic message on failure or show error state
+            setMessages(prevMessages => prevMessages.filter(m => m.id !== optimisticMessage.id));
         } finally {
             setIsSending(false);
         }
@@ -130,7 +146,10 @@ function ConversationPageContent() {
                     {messages.map((message, index) => {
                         const isSender = message.senderId === appUser?.id;
                         const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
-                        const messageDate = message.createdAt instanceof Timestamp ? message.createdAt.toDate() : new Date((message.createdAt as any).seconds * 1000);
+                        
+                        if (!message.createdAt) return null; // Don't render message if timestamp isn't set yet
+
+                        const messageDate = message.createdAt instanceof Timestamp ? message.createdAt.toDate() : new Date(message.createdAt as any);
 
                         return (
                             <div key={message.id} className={cn("flex items-end gap-2", isSender ? "justify-end" : "justify-start")}>
