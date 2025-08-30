@@ -3,49 +3,72 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Repeat, Share } from "lucide-react";
+import { Heart, MessageCircle, Repeat, Share, Bookmark } from "lucide-react";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
-import { toggleLike } from "@/lib/data";
+import { toggleLike, toggleBookmark } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
 export function PostActions({ post }: { post: Post }) {
-  const { appUser } = useAuth();
+  const { appUser, refreshAppUser } = useAuth();
   const { toast } = useToast();
   const [likes, setLikes] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isProcessingLike, setIsProcessingLike] = useState(false);
+  const [isProcessingBookmark, setIsProcessingBookmark] = useState(false);
   
   useEffect(() => {
-    if (appUser && post.likes) {
+    if (appUser) {
       setIsLiked(post.likes.includes(appUser.id));
+      setIsBookmarked(appUser.bookmarks?.includes(post.id) ?? false);
     }
-    if (post.likes) {
-      setLikes(post.likes.length);
-    }
+    setLikes(post.likes.length);
   }, [post, appUser]);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!appUser || isProcessing) return;
+    if (!appUser || isProcessingLike) return;
 
-    setIsProcessing(true);
+    setIsProcessingLike(true);
+    const originalIsLiked = isLiked;
+    setIsLiked(!originalIsLiked);
+    setLikes(likes + (!originalIsLiked ? 1 : -1));
+
     try {
       await toggleLike(post.id, appUser.id);
-      if (isLiked) {
-        setLikes(likes - 1);
-        setIsLiked(false);
-      } else {
-        setLikes(likes + 1);
-        setIsLiked(true);
-      }
     } catch (error) {
        toast({ title: "Failed to like post.", variant: "destructive" });
+       setIsLiked(originalIsLiked);
+       setLikes(likes);
     } finally {
-        setIsProcessing(false);
+        setIsProcessingLike(false);
     }
   };
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!appUser || isProcessingBookmark) return;
+
+    setIsProcessingBookmark(true);
+    const originalIsBookmarked = isBookmarked;
+    setIsBookmarked(!originalIsBookmarked);
+
+    try {
+        await toggleBookmark(post.id, appUser.id);
+        await refreshAppUser(); // Refresh user to get updated bookmarks
+        toast({
+            title: !originalIsBookmarked ? "Post bookmarked" : "Bookmark removed",
+        });
+    } catch (error) {
+        toast({ title: "Failed to update bookmark.", variant: "destructive" });
+        setIsBookmarked(originalIsBookmarked);
+    } finally {
+        setIsProcessingBookmark(false);
+    }
+  };
+
 
   const actions = [
     {
@@ -70,6 +93,16 @@ export function PostActions({ post }: { post: Post }) {
       bgColor: "hover:bg-destructive/10",
       onClick: handleLike,
       fillClass: isLiked ? "fill-current" : "",
+      isProcessing: isProcessingLike,
+    },
+    {
+      Icon: Bookmark,
+      label: "Bookmark",
+      color: isBookmarked ? "text-primary" : "hover:text-primary",
+      bgColor: "hover:bg-primary/10",
+      onClick: handleBookmark,
+      fillClass: isBookmarked ? "fill-current" : "",
+      isProcessing: isProcessingBookmark,
     },
     {
       Icon: Share,
@@ -81,7 +114,7 @@ export function PostActions({ post }: { post: Post }) {
 
   return (
     <div className="flex items-center justify-between mt-4 -ml-2">
-      {actions.map(({ Icon, count, label, color, bgColor, onClick, fillClass }) => (
+      {actions.map(({ Icon, count, label, color, bgColor, onClick, fillClass, isProcessing }) => (
         <div key={label} className="flex items-center group">
           <Button
             variant="ghost"
@@ -89,7 +122,7 @@ export function PostActions({ post }: { post: Post }) {
             className={cn("rounded-full", color, bgColor)}
             aria-label={label}
             onClick={onClick || ((e) => e.stopPropagation())}
-            disabled={isProcessing && label === 'Like'}
+            disabled={isProcessing}
           >
             <Icon className={cn("h-5 w-5", fillClass)} />
           </Button>

@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -32,6 +32,7 @@ export function MainSidebarNav() {
     { href: '/explore', label: 'Explore', icon: Search },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/messages', label: 'Messages', icon: Mail },
+    { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
   ] : [];
@@ -85,7 +86,7 @@ export function MainSidebarNav() {
                     <SidebarMenuButton
                     size="lg"
                     isActive={isActive(item.href)}
-                    tooltip={item.label}
+                    tooltip={{children: item.label}}
                     asChild={false}
                     className={cn("font-semibold", sidebarState === 'collapsed' && 'justify-center')}
                     >
@@ -100,7 +101,7 @@ export function MainSidebarNav() {
                 <Link href="/login">
                     <SidebarMenuButton
                     isActive={isActive('/login')}
-                    tooltip="Login"
+                    tooltip={{children: "Login"}}
                     asChild={false}
                     className={cn(sidebarState === 'collapsed' && 'justify-center')}
                     >

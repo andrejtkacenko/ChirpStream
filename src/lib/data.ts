@@ -92,6 +92,42 @@ export async function getPosts(count: number = 50): Promise<PostWithAuthor[]> {
     return hydratePosts(postsList);
 }
 
+export async function getPostsByIds(ids: string[]): Promise<PostWithAuthor[]> {
+    if (ids.length === 0) return [];
+    
+    const posts: Post[] = [];
+    const batches: Promise<any>[] = [];
+
+    // Firestore 'in' query has a limit of 30 items.
+    for (let i = 0; i < ids.length; i += 30) {
+        const batchIds = ids.slice(i, i + 30);
+        const postsRef = collection(db, 'posts');
+        const q = query(postsRef, where(documentId(), 'in', batchIds));
+        batches.push(getDocs(q));
+    }
+    
+    const postSnapshots = await Promise.all(batches);
+    postSnapshots.forEach(postSnapshot => {
+        postSnapshot.forEach((doc: any) => {
+            posts.push({ id: doc.id, ...doc.data() } as Post);
+        });
+    });
+
+    // Sort by original ID order's reverse, as that's probably chronological
+    const sortedPosts = posts.sort((a, b) => ids.indexOf(b.id) - ids.indexOf(a.id));
+
+    return hydratePosts(sortedPosts);
+}
+
+
+export async function getBookmarkedPosts(userId: string): Promise<PostWithAuthor[]> {
+    const user = await getUserById(userId);
+    if (!user || !user.bookmarks || user.bookmarks.length === 0) {
+        return [];
+    }
+    return getPostsByIds(user.bookmarks);
+}
+
 export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]> {
     const user = await getUserById(userId);
     if (!user) return [];
@@ -178,6 +214,28 @@ export async function toggleLike(postId: string, userId: string) {
     } else {
         await updateDoc(postRef, {
             likes: arrayUnion(userId)
+        });
+    }
+}
+
+export async function toggleBookmark(postId: string, userId: string) {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+        throw new Error("User not found");
+    }
+
+    const userData = userSnap.data();
+    const bookmarks = userData.bookmarks || [];
+    const isBookmarked = bookmarks.includes(postId);
+
+    if (isBookmarked) {
+        await updateDoc(userRef, {
+            bookmarks: arrayRemove(postId)
+        });
+    } else {
+        await updateDoc(userRef, {
+            bookmarks: arrayUnion(postId)
         });
     }
 }

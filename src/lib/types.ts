@@ -10,6 +10,7 @@ export interface User {
   following: string[];
   followers: string[];
   plan: 'free' | 'premium' | 'premium_plus';
+  bookmarks: string[];
 }
 
 export interface Post {
