@@ -71,6 +71,30 @@ function ExplorePageContent() {
             </Button>
         </div>
       </div>
+      
+      <Carousel
+          opts={{
+              align: "start",
+          }}
+          className="w-full px-4 py-4"
+      >
+          <CarouselContent>
+              {trendingTopics.map((trend, index) => (
+              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="rounded-2xl">
+                      <CardContent className="p-3">
+                          <p className="text-xs text-muted-foreground">{trend.category}</p>
+                          <p className="font-bold">{trend.topic}</p>
+                          <p className="text-xs text-muted-foreground">{trend.posts}</p>
+                      </CardContent>
+                  </Card>
+              </CarouselItem>
+              ))}
+          </CarouselContent>
+          <CarouselPrevious className="ml-12" />
+          <CarouselNext className="mr-12" />
+      </Carousel>
+
 
       <Tabs defaultValue="foryou" className="w-full">
         <TabsList className="w-full justify-around rounded-none border-b bg-transparent p-0 h-14">
@@ -80,30 +104,6 @@ function ExplorePageContent() {
             <TabsTrigger value="sports" className="flex-1 rounded-none data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">Sports</TabsTrigger>
         </TabsList>
         <TabsContent value="foryou">
-            <Carousel
-                opts={{
-                    align: "start",
-                }}
-                className="w-full px-4 py-4"
-            >
-                <CarouselContent>
-                    {trendingTopics.map((trend, index) => (
-                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                        <Card className="rounded-2xl">
-                            <CardContent className="p-3">
-                                <p className="text-xs text-muted-foreground">{trend.category}</p>
-                                <p className="font-bold">{trend.topic}</p>
-                                <p className="text-xs text-muted-foreground">{trend.posts}</p>
-                            </CardContent>
-                        </Card>
-                    </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious className="ml-12" />
-                <CarouselNext className="mr-12" />
-            </Carousel>
-
-
             {loading ? <FeedSkeleton /> : (
             <div className="flex flex-col">
                 {posts.map((post) => (
