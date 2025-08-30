@@ -21,7 +21,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
 
 
     return (
-        <div className={cn("dark h-full", themeClass)}>
+        <div className={cn("h-full", themeClass)}>
             {children}
             <Toaster />
         </div>
@@ -41,11 +41,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <Container>
           <div className="flex min-h-screen">
-              {showSidebar && <Sidebar>
+              {showSidebar && <Sidebar className="bg-sidebar">
                 <MainSidebarNav />
               </Sidebar>}
               <div className="flex-1 flex">
-                  <div className="w-full">
+                  <div className="w-full max-w-[600px]">
                     {children}
                   </div>
               </div>
