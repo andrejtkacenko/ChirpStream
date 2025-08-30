@@ -23,3 +23,26 @@ export interface Post {
 }
 
 export type PostWithAuthor = Post & { author: User };
+
+
+export interface Conversation {
+    id: string;
+    participants: string[];
+    lastMessage?: {
+        text: string;
+        senderId: string;
+        timestamp: Timestamp | string;
+    };
+    // Hydrated fields
+    participantDetails: User[]; 
+}
+
+export interface Message {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    text: string;
+    createdAt: Timestamp | { seconds: number, nanoseconds: number } | string;
+     // Hydrated fields
+    sender?: User;
+}

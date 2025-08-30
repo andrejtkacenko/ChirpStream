@@ -1,8 +1,7 @@
 
-import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User, Post, PostWithAuthor } from './types';
-import { Timestamp } from 'firebase/firestore';
+import type { User, Post, PostWithAuthor, Conversation, Message } from './types';
 
 // --- User Functions ---
 
@@ -13,31 +12,37 @@ async function hydratePosts(posts: Post[]): Promise<PostWithAuthor[]> {
     }
 
     const authorIds = [...new Set(posts.map(p => p.authorId))];
-    const users: Record<string, User> = {};
+    const users = await getUsersByIds(authorIds);
+    const usersMap = new Map(users.map(u => [u.id, u]));
+    
+    return posts.map(post => {
+        const author = usersMap.get(post.authorId);
+        return author ? { ...post, author } : null;
+    }).filter((p): p is PostWithAuthor => p !== null);
+}
 
-    // Firestore 'in' queries are limited to 30 elements.
-    // We need to fetch author data in batches.
-    const batches = [];
-    for (let i = 0; i < authorIds.length; i += 30) {
-        const batchIds = authorIds.slice(i, i + 30);
+export async function getUsersByIds(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+    
+    const users: User[] = [];
+    const batches: Promise<any>[] = [];
+
+    for (let i = 0; i < ids.length; i += 30) {
+        const batchIds = ids.slice(i, i + 30);
         const usersRef = collection(db, 'users');
         const q = query(usersRef, where(documentId(), 'in', batchIds));
         batches.push(getDocs(q));
     }
-
-    const userSnapshots = await Promise.all(batches);
-    for (const userSnapshot of userSnapshots) {
-        userSnapshot.forEach(doc => {
-            users[doc.id] = { id: doc.id, ...doc.data() } as User;
-        });
-    }
     
-    return posts.map(post => ({
-        ...post,
-        author: users[post.authorId]
-    })).filter(p => p.author); // Filter out posts where author might not have been found
-}
+    const userSnapshots = await Promise.all(batches);
+    userSnapshots.forEach(userSnapshot => {
+        userSnapshot.forEach((doc: any) => {
+            users.push({ id: doc.id, ...doc.data() } as User);
+        });
+    });
 
+    return users;
+}
 
 export async function getUsers(count: number = 10): Promise<User[]> {
     const usersCol = collection(db, 'users');
@@ -238,4 +243,115 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
     );
 
     return filteredPosts;
+}
+
+
+// --- Messaging Functions ---
+
+export async function getConversationsForUser(userId: string): Promise<Conversation[]> {
+    const convRef = collection(db, 'conversations');
+    const q = query(convRef, where('participants', 'array-contains', userId));
+    
+    const querySnapshot = await getDocs(q);
+    const conversations = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    } as Conversation));
+
+    // Hydrate participant details
+    for (const conv of conversations) {
+        conv.participantDetails = await getUsersByIds(conv.participants);
+    }
+    
+    return conversations;
+}
+
+export function getMessagesForConversation(conversationId: string, callback: (messages: Message[]) => void): () => void {
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        const messages = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Message));
+
+        // Hydrate sender details
+        const senderIds = [...new Set(messages.map(m => m.senderId))];
+        const senders = await getUsersByIds(senderIds);
+        const sendersMap = new Map(senders.map(s => [s.id, s]));
+
+        const hydratedMessages = messages.map(msg => ({
+            ...msg,
+            sender: sendersMap.get(msg.senderId)
+        }));
+
+        callback(hydratedMessages);
+    });
+
+    return unsubscribe;
+}
+
+export async function getConversation(conversationId: string): Promise<Conversation | null> {
+    const convRef = doc(db, 'conversations', conversationId);
+    const docSnap = await getDoc(convRef);
+    if (!docSnap.exists()) return null;
+
+    const conv = { id: docSnap.id, ...docSnap.data() } as Conversation;
+    conv.participantDetails = await getUsersByIds(conv.participants);
+    return conv;
+}
+
+
+export async function sendMessage(conversationId: string, senderId: string, text: string): Promise<void> {
+    const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+    const conversationRef = doc(db, 'conversations', conversationId);
+    
+    const newMessage = {
+        senderId,
+        text,
+        createdAt: serverTimestamp(),
+    };
+
+    await addDoc(messagesRef, newMessage);
+    
+    // Update the lastMessage on the conversation
+    await updateDoc(conversationRef, {
+        lastMessage: {
+            text,
+            senderId,
+            timestamp: serverTimestamp()
+        }
+    });
+}
+
+export async function findOrCreateConversation(userId1: string, userId2: string): Promise<string> {
+    const conversationsRef = collection(db, 'conversations');
+    
+    // Firestore doesn't support array-contains-all, so we query for one user and filter locally.
+    // This is okay for 1-on-1 chats.
+    const q = query(conversationsRef, where('participants', 'array-contains', userId1));
+    
+    const querySnapshot = await getDocs(q);
+    
+    let existingConversation = null;
+    querySnapshot.forEach(doc => {
+        const conv = doc.data() as Conversation;
+        // Check if it's a 1-on-1 chat with exactly these two participants
+        if (conv.participants.length === 2 && conv.participants.includes(userId2)) {
+            existingConversation = { id: doc.id, ...conv };
+        }
+    });
+
+    if (existingConversation) {
+        return existingConversation.id;
+    }
+
+    // No existing conversation, so create one
+    const newConversation = {
+        participants: [userId1, userId2],
+        createdAt: serverTimestamp(),
+    };
+    const docRef = await addDoc(conversationsRef, newConversation);
+    return docRef.id;
 }

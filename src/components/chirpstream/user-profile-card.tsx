@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,9 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
-import { followUser, unfollowUser, updateUserPlan } from "@/lib/data";
+import { followUser, unfollowUser, updateUserPlan, findOrCreateConversation } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { Crown } from "lucide-react";
+import { Crown, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 
 type UserProfileCardProps = {
@@ -18,6 +20,7 @@ type UserProfileCardProps = {
 export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
   const { appUser: currentUser, loading, refreshAppUser } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(user.followers.length);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,6 +52,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
         setFollowersCount(prev => prev + 1);
         setIsFollowing(true);
       }
+      await refreshAppUser();
     } catch (error) {
       console.error("Failed to toggle follow:", error);
       toast({ title: "Something went wrong.", variant: "destructive" });
@@ -57,31 +61,50 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
     }
   };
 
-  const handleUpgrade = async () => {
-    if (!isCurrentUser) return;
+  const handleSendMessage = async () => {
+    if (!currentUser) {
+        toast({ title: "Please login to send messages.", variant: "destructive" });
+        return;
+    }
     setIsProcessing(true);
-    const newPlan = user.plan === 'free' ? 'premium' : 'premium_plus';
     try {
-        await updateUserPlan(user.id, newPlan);
-        await refreshAppUser();
-        toast({ title: "Congratulations!", description: `You are now a ${newPlan.charAt(0).toUpperCase() + newPlan.slice(1)} user.` });
+        const conversationId = await findOrCreateConversation(currentUser.id, user.id);
+        router.push(`/messages/${conversationId}`);
     } catch (error) {
-        console.error("Failed to upgrade plan:", error);
-        toast({ title: "Upgrade failed.", description: "Could not update your plan.", variant: "destructive" });
+        console.error("Failed to start conversation:", error);
+        toast({ title: "Could not start conversation.", variant: "destructive" });
     } finally {
         setIsProcessing(false);
     }
   }
 
-  const renderUpgradeButton = () => {
-    if (!isCurrentUser || user.plan === 'premium_plus') return null;
 
-    return (
-        <Button onClick={handleUpgrade} disabled={isProcessing}>
-            <Crown className="mr-2 h-4 w-4" />
-            {user.plan === 'free' ? 'Upgrade to Premium' : 'Upgrade to Premium+'}
-        </Button>
-    )
+  const renderActionButtons = () => {
+    if (isCurrentUser) {
+        if (user.plan === 'premium_plus') return null;
+         return (
+            <Button onClick={() => router.push('/premium')} disabled={isProcessing}>
+                <Crown className="mr-2 h-4 w-4" />
+                {user.plan === 'free' ? 'Upgrade to Premium' : 'Upgrade to Premium+'}
+            </Button>
+        )
+    } else {
+        return (
+            <div className="flex gap-2">
+                <Button variant="outline" onClick={handleSendMessage} disabled={isProcessing}>
+                    <Mail className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={isFollowing ? "outline" : "default"} 
+                  onClick={toggleFollow}
+                  disabled={loading || isProcessing}
+                  className="w-28"
+                >
+                  {isProcessing ? "..." : isFollowing ? "Following" : "Follow"}
+                </Button>
+            </div>
+        )
+    }
   }
 
   return (
@@ -96,15 +119,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
       </div>
       <div className="pt-20 px-6 pb-6 bg-card rounded-b-lg">
         <div className="flex justify-end">
-          {isCurrentUser ? renderUpgradeButton() : (
-            <Button 
-              variant={isFollowing ? "outline" : "default"} 
-              onClick={toggleFollow}
-              disabled={loading || isProcessing}
-            >
-              {isProcessing ? "..." : isFollowing ? "Following" : "Follow"}
-            </Button>
-          )}
+          {renderActionButtons()}
         </div>
         <div>
           <div className="flex items-center gap-2">
