@@ -7,6 +7,8 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/toaster';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -46,6 +48,17 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
     }
 }
 
+function AppBody({ children }: { children: React.ReactNode }) {
+    const { appUser } = useAuth();
+    const themeClass = appUser?.plan === 'premium' ? 'premium' : '';
+
+    return (
+        <div className={cn("dark h-full", themeClass)}>
+            {children}
+            <Toaster />
+        </div>
+    )
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -152,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      <AppBody>{children}</AppBody>
     </AuthContext.Provider>
   );
 }
