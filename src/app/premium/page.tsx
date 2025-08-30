@@ -3,7 +3,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle, Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CheckCircle, Crown, Loader2 } from "lucide-react";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
 import { updateUserPlan } from "@/lib/data";
@@ -46,29 +49,78 @@ const plans = [
   },
 ];
 
+type Plan = 'premium' | 'premium_plus';
+
+function PaymentForm({ onPaymentSuccess, planName, planPrice }: { onPaymentSuccess: () => void, planName: string, planPrice: string }) {
+    const [isPaying, setIsPaying] = useState(false);
+
+    const handlePayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsPaying(true);
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setIsPaying(false);
+        onPaymentSuccess();
+    }
+
+    return (
+        <form onSubmit={handlePayment}>
+            <DialogHeader>
+                <DialogTitle>Upgrade to {planName}</DialogTitle>
+                <DialogDescription>
+                    You are about to be charged {planPrice}. Enter your card details below to complete the purchase.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-6">
+                <div className="space-y-2">
+                    <Label htmlFor="card-number">Card Number</Label>
+                    <Input id="card-number" placeholder="1234 5678 9101 1121" defaultValue="4242 4242 4242 4242" />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2 col-span-2">
+                        <Label htmlFor="expiry">Expiry Date</Label>
+                        <Input id="expiry" placeholder="MM/YY" defaultValue="12/28" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cvc">CVC</Label>
+                        <Input id="cvc" placeholder="123" defaultValue="123" />
+                    </div>
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="submit" className="w-full" disabled={isPaying}>
+                    {isPaying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isPaying ? "Processing..." : `Pay ${planPrice}`}
+                </Button>
+            </DialogFooter>
+        </form>
+    )
+}
 
 function PremiumPageContent() {
     const { appUser, refreshAppUser } = useAuth();
     const { toast } = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-    const handleUpgrade = async (planId: 'premium' | 'premium_plus') => {
-        if (!appUser) return;
+    const handleUpgrade = async () => {
+        if (!appUser || !selectedPlan) return;
         setIsProcessing(true);
         try {
-            await updateUserPlan(appUser.id, planId);
+            await updateUserPlan(appUser.id, selectedPlan);
             await refreshAppUser();
-            toast({ title: "Congratulations!", description: `You are now a ${planId.charAt(0).toUpperCase() + planId.slice(1)} user.` });
+            toast({ title: "Congratulations!", description: `You are now a ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} user.` });
         } catch (error) {
             console.error("Failed to upgrade plan:", error);
             toast({ title: "Upgrade failed.", description: "Could not update your plan.", variant: "destructive" });
         } finally {
             setIsProcessing(false);
+            setSelectedPlan(null);
         }
     }
 
-
   return (
+    <>
     <div className="p-4 md:p-6">
         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold tracking-tight">Choose Your Premium Experience</h1>
@@ -100,7 +152,7 @@ function PremiumPageContent() {
                        <Button 
                         className="w-full mt-6"
                         disabled={isProcessing || appUser?.plan === plan.planId || (appUser?.plan === 'premium_plus' && plan.planId === 'premium')}
-                        onClick={() => handleUpgrade(plan.planId as 'premium' | 'premium_plus')}
+                        onClick={() => setSelectedPlan(plan.planId as Plan)}
                        >
                            {appUser?.plan === plan.planId ? "Current Plan" : "Upgrade"}
                        </Button>
@@ -109,6 +161,18 @@ function PremiumPageContent() {
             ))}
         </div>
     </div>
+    <Dialog open={!!selectedPlan} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent>
+           {selectedPlan && (
+                <PaymentForm 
+                    onPaymentSuccess={handleUpgrade}
+                    planName={plans.find(p => p.planId === selectedPlan)?.name ?? ""}
+                    planPrice={plans.find(p => p.planId === selectedPlan)?.price ?? ""}
+                />
+           )}
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
