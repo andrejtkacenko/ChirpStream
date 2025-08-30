@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context'
 import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
+import { Container } from '../ui/container'
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
@@ -38,8 +39,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-        <div className="flex min-h-screen justify-center">
-            <div className="w-full max-w-7xl flex">
+        <Container>
+          <div className="flex min-h-screen">
               {showSidebar && <Sidebar>
                 <MainSidebarNav />
               </Sidebar>}
@@ -48,8 +49,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     {children}
                   </div>
               </div>
-            </div>
-        </div>
+          </div>
+        </Container>
       </SidebarProvider>
     </AppBody>
   )
