@@ -97,7 +97,7 @@ export function PostActions({ post }: { post: Post }) {
             <span
               className={cn(
                 "text-sm text-muted-foreground",
-                label === "Like" && isLiked ? color : "group-hover:"+color
+                label === "Like" && isLiked ? "text-destructive" : "group-hover:" + color.replace('hover:','')
               )}
             >
               {count > 0 ? count : ""}
