@@ -10,8 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const MAX_CHARS_FREE = 280;
-const MAX_CHARS_PREMIUM = 1000;
+const MAX_CHARS = {
+  free: 280,
+  premium: 1000,
+  premium_plus: 4000
+};
 
 export function CreatePostForm() {
   const { appUser } = useAuth();
@@ -20,7 +23,7 @@ export function CreatePostForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const maxChars = appUser?.plan === 'premium' ? MAX_CHARS_PREMIUM : MAX_CHARS_FREE;
+  const maxChars = appUser ? MAX_CHARS[appUser.plan] : MAX_CHARS.free;
   const charsLeft = maxChars - content.length;
 
   const handleSubmit = async () => {

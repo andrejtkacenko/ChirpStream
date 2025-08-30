@@ -60,16 +60,28 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
   const handleUpgrade = async () => {
     if (!isCurrentUser) return;
     setIsProcessing(true);
+    const newPlan = user.plan === 'free' ? 'premium' : 'premium_plus';
     try {
-        await updateUserPlan(user.id, 'premium');
+        await updateUserPlan(user.id, newPlan);
         await refreshAppUser();
-        toast({ title: "Congratulations!", description: "You are now a Premium user." });
+        toast({ title: "Congratulations!", description: `You are now a ${newPlan.charAt(0).toUpperCase() + newPlan.slice(1)} user.` });
     } catch (error) {
         console.error("Failed to upgrade plan:", error);
         toast({ title: "Upgrade failed.", description: "Could not update your plan.", variant: "destructive" });
     } finally {
         setIsProcessing(false);
     }
+  }
+
+  const renderUpgradeButton = () => {
+    if (!isCurrentUser || user.plan === 'premium_plus') return null;
+
+    return (
+        <Button onClick={handleUpgrade} disabled={isProcessing}>
+            <Crown className="mr-2 h-4 w-4" />
+            {user.plan === 'free' ? 'Upgrade to Premium' : 'Upgrade to Premium+'}
+        </Button>
+    )
   }
 
   return (
@@ -84,14 +96,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
       </div>
       <div className="pt-20 px-6 pb-6 bg-card rounded-b-lg">
         <div className="flex justify-end">
-          {isCurrentUser ? (
-            user.plan === 'free' && (
-                <Button onClick={handleUpgrade} disabled={isProcessing}>
-                    <Crown className="mr-2 h-4 w-4" />
-                    Upgrade to Premium
-                </Button>
-            )
-          ) : (
+          {isCurrentUser ? renderUpgradeButton() : (
             <Button 
               variant={isFollowing ? "outline" : "default"} 
               onClick={toggleFollow}
@@ -104,8 +109,8 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold">{user.name}</h2>
-            {user.plan === 'premium' && (
-                <div className="p-1 bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-full">
+            {user.plan !== 'free' && (
+                <div className={`p-1 rounded-full ${user.plan === 'premium_plus' ? 'bg-gradient-to-tr from-purple-500 to-indigo-600' : 'bg-gradient-to-tr from-amber-400 to-yellow-200'}`}>
                     <Crown className="h-5 w-5 text-yellow-900" />
                 </div>
             )}

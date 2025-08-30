@@ -1,9 +1,8 @@
-
 'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -28,6 +27,7 @@ export function MainSidebarNav() {
     { href: '/explore', label: 'Explore', icon: Search },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/messages', label: 'Messages', icon: Mail },
+    { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
   ] : [];
 

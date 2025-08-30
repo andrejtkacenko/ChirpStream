@@ -37,7 +37,7 @@ export async function getUserByUsername(username: string): Promise<User | undefi
     return { id: userSnapshot.docs[0].id, ...userData } as User;
 }
 
-export async function updateUserPlan(userId: string, plan: 'free' | 'premium'): Promise<void> {
+export async function updateUserPlan(userId: string, plan: 'free' | 'premium' | 'premium_plus'): Promise<void> {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, { plan });
 }

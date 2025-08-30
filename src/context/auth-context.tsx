@@ -50,7 +50,13 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const { appUser } = useAuth();
-    const themeClass = appUser?.plan === 'premium' ? 'premium' : '';
+    let themeClass = '';
+    if (appUser?.plan === 'premium') {
+        themeClass = 'premium';
+    } else if (appUser?.plan === 'premium_plus') {
+        themeClass = 'premium-plus';
+    }
+
 
     return (
         <div className={cn("dark h-full", themeClass)}>

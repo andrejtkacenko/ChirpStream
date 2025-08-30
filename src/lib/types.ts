@@ -8,11 +8,11 @@ export interface User {
   bio: string;
   following: string[];
   followers: string[];
-  plan: 'free' | 'premium';
+  plan: 'free' | 'premium' | 'premium_plus';
 }
 
 export interface Post {
-  id: string;
+  id:string;
   authorId: string;
   content: string;
   createdAt: Timestamp | string; // Allow both for client-side creation and server-side fetching
