@@ -1,8 +1,9 @@
+
 'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -15,13 +16,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuLabel } from '../ui/dropdown-menu'
 import { useAuth } from '@/context/auth-context'
+import type { User as FirebaseUser } from 'firebase/auth'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
-  const { appUser, loading, logout } = useAuth();
-
-  const isActive = (path: string) => pathname === path
+  const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers } = useAuth();
 
   const menuItems = appUser ? [
     { href: '/', label: 'Home', icon: Home },
@@ -32,12 +32,15 @@ export function MainSidebarNav() {
   ] : [];
 
   const handleAddAccount = () => {
-    logout(false); // don't redirect to login
     router.push('/login');
   }
 
   const handleLogout = () => {
-    logout(true); // redirect to login
+    logout(true); 
+  }
+  
+  const handleSwitchUser = (user: FirebaseUser) => {
+    switchUser(user);
   }
 
   return (
@@ -103,19 +106,23 @@ export function MainSidebarNav() {
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
                <DropdownMenuGroup>
-                <DropdownMenuLabel>Current Account</DropdownMenuLabel>
-                <DropdownMenuItem>
-                    <div className="flex gap-3 items-center">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
-                          <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-left">
-                          <p className="font-bold">{appUser.name}</p>
-                          <p className="text-sm text-muted-foreground">@{appUser.username}</p>
-                        </div>
+                {appUsers.map((u, i) => u && (
+                  <DropdownMenuItem key={u.id} onClick={() => firebaseUsers[i] && handleSwitchUser(firebaseUsers[i]!)}>
+                    <div className="flex justify-between items-center w-full">
+                      <div className="flex gap-3 items-center">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={u.avatar ?? undefined} alt={u.name ?? ''} />
+                            <AvatarFallback>{u.name?.[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="text-left">
+                            <p className="font-bold">{u.name}</p>
+                            <p className="text-sm text-muted-foreground">@{u.username}</p>
+                          </div>
+                      </div>
+                      {u.id === appUser.id && <Check className="h-4 w-4" />}
                     </div>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleAddAccount}>
@@ -124,7 +131,7 @@ export function MainSidebarNav() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out @{appUser.username}</span>
+                <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
