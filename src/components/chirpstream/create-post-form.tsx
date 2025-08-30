@@ -10,6 +10,7 @@ import { createPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const MAX_CHARS = {
   free: 280,
@@ -17,18 +18,33 @@ const MAX_CHARS = {
   premium_plus: 4000
 };
 
+function CreatePostFormSkeleton() {
+    return (
+        <div className="flex gap-4 p-4 border-b">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="w-full space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <div className="flex justify-end">
+                    <Skeleton className="h-10 w-20" />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+
 export function CreatePostForm() {
-  const { appUser } = useAuth();
+  const { appUser, loading } = useAuth();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
-  if (!appUser) {
-    return null; // Or a skeleton loader
+  if (loading || !appUser) {
+    return <CreatePostFormSkeleton />;
   }
 
-  const maxChars = MAX_CHARS[appUser.plan];
+  const maxChars = MAX_CHARS[appUser.plan] || MAX_CHARS.free;
   const charsLeft = maxChars - content.length;
 
   const handleSubmit = async () => {
