@@ -39,7 +39,7 @@ function FeedSkeleton() {
   );
 }
 
-export default function Home() {
+function HomePageContent() {
   const { appUser, loading } = useAuth();
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
@@ -64,7 +64,6 @@ export default function Home() {
 
 
   return (
-    <ProtectedRoute>
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-8 p-4 md:p-6">
         <main>
           <h1 className="text-2xl font-bold mb-4">Home</h1>
@@ -84,6 +83,13 @@ export default function Home() {
           <RightSidebar />
         </aside>
       </div>
-    </ProtectedRoute>
   );
+}
+
+export default function Home() {
+  return (
+    <ProtectedRoute>
+      <HomePageContent />
+    </ProtectedRoute>
+  )
 }

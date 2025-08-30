@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -13,11 +13,12 @@ import {
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuLabel } from '../ui/dropdown-menu'
 import { useAuth } from '@/context/auth-context'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
+  const router = useRouter();
   const { appUser, loading, logout } = useAuth();
 
   const isActive = (path: string) => pathname === path
@@ -29,6 +30,15 @@ export function MainSidebarNav() {
     { href: '/messages', label: 'Messages', icon: Mail },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
   ] : [];
+
+  const handleAddAccount = () => {
+    logout(false); // don't redirect to login
+    router.push('/login');
+  }
+
+  const handleLogout = () => {
+    logout(true); // redirect to login
+  }
 
   return (
     <>
@@ -92,7 +102,30 @@ export function MainSidebarNav() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
-              <DropdownMenuItem onClick={logout}>Log out @{appUser.username}</DropdownMenuItem>
+               <DropdownMenuGroup>
+                <DropdownMenuLabel>Current Account</DropdownMenuLabel>
+                <DropdownMenuItem>
+                    <div className="flex gap-3 items-center">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
+                          <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="text-left">
+                          <p className="font-bold">{appUser.name}</p>
+                          <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+                        </div>
+                    </div>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddAccount}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                <span>Add an existing account</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out @{appUser.username}</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

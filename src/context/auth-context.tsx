@@ -5,13 +5,14 @@ import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } 
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 
 interface AuthContextType {
   user: FirebaseUser | null;
   appUser: User | null;
   loading: boolean;
-  logout: () => void;
+  logout: (redirect?: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
@@ -60,8 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const logout = async () => {
+  const logout = async (redirect = true) => {
     await firebaseSignOut(auth);
+    if (redirect) {
+      router.push('/login');
+    }
   };
 
   const value = { user, appUser, loading, logout };

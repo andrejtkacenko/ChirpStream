@@ -12,12 +12,14 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      {showSidebar && <Sidebar>
-        <MainSidebarNav />
-      </Sidebar>}
-      <SidebarInset>
-        {children}
-      </SidebarInset>
+      <div className="flex min-h-screen">
+        {showSidebar && <Sidebar>
+          <MainSidebarNav />
+        </Sidebar>}
+        <div className="flex-1">
+          {children}
+        </div>
+      </div>
     </SidebarProvider>
   )
 }
