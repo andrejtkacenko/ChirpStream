@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -13,8 +13,37 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { MainLayout } from '@/components/layout/main-layout';
 import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function LoginPage() {
+function LoginSkeleton() {
+  return (
+    <div className="flex items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-4 w-4/5 mt-2" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+             <Skeleton className="h-5 w-16" />
+             <Skeleton className="h-10 w-full" />
+          </div>
+           <div className="space-y-2">
+             <Skeleton className="h-5 w-20" />
+             <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-10 w-full" />
+          <div className="relative my-4 h-5">
+            <Skeleton className="h-px w-full absolute top-1/2" />
+          </div>
+           <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -130,4 +159,13 @@ export default function LoginPage() {
       </div>
     </MainLayout>
   );
+}
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginPageContent />
+    </Suspense>
+  )
 }
