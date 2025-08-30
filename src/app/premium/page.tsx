@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, Crown, Loader2 } from "lucide-react";
-import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
 import { updateUserPlan } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { PremiumLayout } from "@/components/layout/premium-layout";
 
 const plans = [
   {
@@ -178,8 +178,8 @@ function PremiumPageContent() {
 
 export default function PremiumPage() {
     return (
-        <ProtectedRoute>
+        <PremiumLayout>
             <PremiumPageContent />
-        </ProtectedRoute>
+        </PremiumLayout>
     )
 }
