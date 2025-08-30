@@ -93,18 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAppUsers(appUsersData);
 
       } else {
-        const lastUserUid = localStorage.getItem(CURRENT_USER_UID_KEY);
-        const allStoredUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
-        const userToSignIn = allStoredUsers.find((u: any) => u.uid === lastUserUid) || allStoredUsers[0];
-        
-        if (userToSignIn && (window.location.pathname !== '/login' && window.location.pathname !== '/signup')) {
-          router.push(`/login?email=${userToSignIn.email}&autoLogin=true`);
-        } else {
-            setUser(null);
-            setAppUser(null);
-            setUsers([]);
-            setAppUsers([]);
-        }
+        setUser(null);
+        setAppUser(null);
+        setUsers([]);
+        setAppUsers([]);
       }
       setLoading(false);
     });
@@ -113,10 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const switchUser = async (targetUser: FirebaseUser) => {
-    localStorage.setItem(CURRENT_USER_UID_KEY, targetUser.uid);
     await firebaseSignOut(auth);
-    // The onAuthStateChanged listener will handle the redirection and "auto-login"
-    window.location.reload(); 
+    router.push(`/login?email=${targetUser.email}&autoLogin=true`);
   };
 
   const logout = async (redirect = true) => {
@@ -128,18 +118,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const remainingUsers = allStoredUsers.filter((u: any) => u.uid !== currentUserUid);
     localStorage.setItem('firebase_users', JSON.stringify(remainingUsers));
     
+    setUser(null);
+    setAppUser(null);
+    setUsers([]);
+    setAppUsers([]);
+
     if (redirect) {
         if (remainingUsers.length > 0) {
-            localStorage.setItem(CURRENT_USER_UID_KEY, remainingUsers[0].uid);
-            router.push(`/login?email=${remainingUsers[0].email}`);
+            router.push(`/login?email=${remainingUsers[0].email}&autoLogin=true`);
         } else {
             router.push('/login');
         }
-    } else {
-      setUser(null);
-      setAppUser(null);
-      setUsers([]);
-      setAppUsers([]);
     }
   };
 
