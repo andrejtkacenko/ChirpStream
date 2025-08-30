@@ -16,7 +16,7 @@ export interface Post {
   authorId: string;
   content: string;
   createdAt: Timestamp | string; // Allow both for client-side creation and server-side fetching
-  likes: number;
+  likes: string[]; // Array of user IDs who liked the post
   reposts: number;
   replies: number;
 }

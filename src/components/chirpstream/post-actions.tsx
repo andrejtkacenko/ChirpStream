@@ -1,23 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Repeat, Share } from "lucide-react";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/auth-context";
+import { toggleLike } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 export function PostActions({ post }: { post: Post }) {
-  const [likes, setLikes] = useState(post.likes);
+  const { appUser } = useAuth();
+  const { toast } = useToast();
+  const [likes, setLikes] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(false);
-
-  const handleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isLiked) {
-      setLikes(likes - 1);
-    } else {
-      setLikes(likes + 1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  useEffect(() => {
+    if (appUser) {
+      setIsLiked(post.likes.includes(appUser.id));
     }
-    setIsLiked(!isLiked);
+    setLikes(post.likes.length);
+  }, [post, appUser]);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!appUser || isProcessing) return;
+
+    setIsProcessing(true);
+    try {
+      await toggleLike(post.id, appUser.id);
+      if (isLiked) {
+        setLikes(likes - 1);
+        setIsLiked(false);
+      } else {
+        setLikes(likes + 1);
+        setIsLiked(true);
+      }
+    } catch (error) {
+       toast({ title: "Failed to like post.", variant: "destructive" });
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   const actions = [
@@ -62,6 +86,7 @@ export function PostActions({ post }: { post: Post }) {
             className={cn("rounded-full", color, bgColor)}
             aria-label={label}
             onClick={onClick || ((e) => e.stopPropagation())}
+            disabled={isProcessing && label === 'Like'}
           >
             <Icon className={cn("h-5 w-5", fillClass)} />
           </Button>

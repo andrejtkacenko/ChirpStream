@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post } from './types';
 
@@ -48,13 +48,24 @@ export async function getPosts(postIds?: string[]): Promise<Post[]> {
     const postsCol = collection(db, 'posts');
     let q;
     if (postIds && postIds.length > 0) {
-        q = query(postsCol, where('__name__', 'in', postIds), orderBy('createdAt', 'desc'));
+        // Firestore 'in' query has a limit of 10 elements. For a real app, this would need a different approach.
+        const limitedPostIds = postIds.slice(0, 10);
+        q = query(postsCol, where('__name__', 'in', limitedPostIds));
     } else {
         q = query(postsCol, orderBy('createdAt', 'desc'), limit(50));
     }
-    const postsSnapshot = await getDocs(q);
+     const postsSnapshot = await getDocs(q);
+    
+    // Manual sort because Firestore doesn't support orderBy with 'in' queries on different fields.
     const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-    return postsList;
+    
+    if(!postIds) return postsList;
+
+    return postsList.sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+        return dateB - dateA;
+    });
 }
 
 
@@ -73,12 +84,44 @@ export async function createPost(authorId: string, content: string): Promise<str
       authorId,
       content,
       createdAt: serverTimestamp(),
-      likes: 0,
+      likes: [],
       reposts: 0,
       replies: 0,
     };
     const docRef = await addDoc(postsCol, newPost);
     return docRef.id;
+}
+
+export async function updatePost(postId: string, content: string): Promise<void> {
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, { content });
+}
+
+export async function deletePost(postId: string): Promise<void> {
+    const postRef = doc(db, 'posts', postId);
+    await deleteDoc(postRef);
+}
+
+
+export async function toggleLike(postId: string, userId: string) {
+    const postRef = doc(db, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) {
+        throw new Error("Post not found");
+    }
+
+    const post = postSnap.data() as Post;
+    const isLiked = post.likes.includes(userId);
+
+    if (isLiked) {
+        await updateDoc(postRef, {
+            likes: arrayRemove(userId)
+        });
+    } else {
+        await updateDoc(postRef, {
+            likes: arrayUnion(userId)
+        });
+    }
 }
 
 
