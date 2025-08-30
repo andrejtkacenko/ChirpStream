@@ -2,41 +2,76 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getUsers } from "@/lib/data";
+import { getUsers, followUser, unfollowUser } from "@/lib/data";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
+
 
 export function WhoToFollow() {
-  const { user: currentUser } = useAuth();
+  const { appUser: currentUser } = useAuth();
+  const { toast } = useToast();
   const [usersToFollow, setUsersToFollow] = useState<User[]>([]);
-  const [followed, setFollowed] = useState<string[]>([]);
+  const [followed, setFollowed] = useState<Set<string>>(new Set());
   
   useEffect(() => {
-    const fetchUsers = async () => {
-      const allUsers = await getUsers();
-      // In a real app, you'd also get the current user's following list
-      const filteredUsers = allUsers.filter(
-        (user) => user.id !== currentUser?.uid
-      ).slice(0, 3);
-      setUsersToFollow(filteredUsers);
-    };
+    if (currentUser) {
+        const fetchUsers = async () => {
+          const allUsers = await getUsers();
+          const followedUsers = new Set(currentUser.following || []);
+          const filteredUsers = allUsers.filter(
+            (user) => user.id !== currentUser?.id && !followedUsers.has(user.id)
+          ).slice(0, 3);
+          setUsersToFollow(filteredUsers);
+          setFollowed(followedUsers);
+        };
 
-    if(currentUser) {
-      fetchUsers();
+        fetchUsers();
     }
   }, [currentUser]);
 
 
-  const toggleFollow = (userId: string) => {
-    setFollowed(prev => 
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
+  const toggleFollow = async (userId: string) => {
+    if (!currentUser) {
+        toast({ title: "Please login to follow users.", variant: "destructive" });
+        return;
+    }
+    
+    const isCurrentlyFollowing = followed.has(userId);
+    
+    // Immediately update UI for responsiveness
+    const newFollowed = new Set(followed);
+    if (isCurrentlyFollowing) {
+        newFollowed.delete(userId);
+    } else {
+        newFollowed.add(userId);
+    }
+    setFollowed(newFollowed);
+    
+    try {
+        if (isCurrentlyFollowing) {
+            await unfollowUser(currentUser.id, userId);
+        } else {
+            await followUser(currentUser.id, userId);
+        }
+    } catch (error) {
+        console.error("Failed to toggle follow:", error);
+        toast({ title: "Something went wrong.", variant: "destructive" });
+        // Revert UI change on error
+        const revertedFollowed = new Set(followed);
+        if (isCurrentlyFollowing) {
+            revertedFollowed.add(userId);
+        } else {
+            revertedFollowed.delete(userId);
+        }
+        setFollowed(revertedFollowed);
+    }
   };
 
   if (!usersToFollow.length) {
-    return <p className="text-sm text-muted-foreground">No users to suggest.</p>;
+    return <p className="text-sm text-muted-foreground">No new users to suggest.</p>;
   }
 
   return (
@@ -54,11 +89,11 @@ export function WhoToFollow() {
             </div>
           </Link>
           <Button 
-            variant={followed.includes(user.id) ? "outline" : "default"}
+            variant={followed.has(user.id) ? "outline" : "default"}
             size="sm"
             onClick={() => toggleFollow(user.id)}
           >
-            {followed.includes(user.id) ? 'Following' : 'Follow'}
+            {followed.has(user.id) ? 'Following' : 'Follow'}
           </Button>
         </div>
       ))}

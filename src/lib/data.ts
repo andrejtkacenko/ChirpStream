@@ -1,9 +1,10 @@
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post } from './types';
 
 // NOTE: The data is now fetched from Firestore.
-// The mock data has been removed. We will need to add a way to populate the database.
+
+// --- User Functions ---
 
 export async function getUsers(count: number = 10): Promise<User[]> {
     const usersCol = collection(db, 'users');
@@ -14,15 +15,16 @@ export async function getUsers(count: number = 10): Promise<User[]> {
 }
 
 export async function getUserById(id: string): Promise<User | undefined> {
-    const usersCol = collection(db, 'users');
-    const q = query(usersCol, where('id', '==', id), limit(1));
-    const userSnapshot = await getDocs(q);
-    if (userSnapshot.empty) {
+    const userRef = doc(db, 'users', id);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        console.warn(`User with id ${id} not found.`);
         return undefined;
     }
-    const userData = userSnapshot.docs[0].data();
-    return { id: userSnapshot.docs[0].id, ...userData } as User;
+    return { id: userSnap.id, ...userSnap.data() } as User;
 }
+
 
 export async function getUserByUsername(username: string): Promise<User | undefined> {
     const usersCol = collection(db, 'users');
@@ -35,15 +37,24 @@ export async function getUserByUsername(username: string): Promise<User | undefi
     return { id: userSnapshot.docs[0].id, ...userData } as User;
 }
 
-export async function getPosts(): Promise<Post[]> {
+// --- Post Functions ---
+
+export async function getPosts(postIds?: string[]): Promise<Post[]> {
     const postsCol = collection(db, 'posts');
-    const q = query(postsCol, orderBy('createdAt', 'desc'));
+    let q;
+    if (postIds && postIds.length > 0) {
+        q = query(postsCol, where('__name__', 'in', postIds), orderBy('createdAt', 'desc'));
+    } else {
+        q = query(postsCol, orderBy('createdAt', 'desc'), limit(50));
+    }
     const postsSnapshot = await getDocs(q);
     const postsList = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
     return postsList;
 }
 
+
 export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
+    if (!authorId) return [];
     const postsCol = collection(db, 'posts');
     const q = query(postsCol, where('authorId', '==', authorId), orderBy('createdAt', 'desc'));
     const postsSnapshot = await getDocs(q);
@@ -51,8 +62,45 @@ export async function getPostsByAuthor(authorId: string): Promise<Post[]> {
     return postsList;
 }
 
-// currentUser is now handled by AuthContext, this is an example of how you might get it
-// but it's better to use the context in components.
-export async function getCurrentUser(userId: string): Promise<User | undefined> {
-    return await getUserById(userId);
+export async function createPost(authorId: string, content: string): Promise<string> {
+    const postsCol = collection(db, 'posts');
+    const newPost = {
+      authorId,
+      content,
+      createdAt: serverTimestamp(),
+      likes: 0,
+      reposts: 0,
+      replies: 0,
+    };
+    const docRef = await addDoc(postsCol, newPost);
+    return docRef.id;
+}
+
+
+// --- Follow/Unfollow Functions ---
+
+export async function followUser(currentUserId: string, targetUserId: string) {
+    const currentUserRef = doc(db, 'users', currentUserId);
+    const targetUserRef = doc(db, 'users', targetUserId);
+
+    await updateDoc(currentUserRef, {
+        following: arrayUnion(targetUserId)
+    });
+
+    await updateDoc(targetUserRef, {
+        followers: arrayUnion(currentUserId)
+    });
+}
+
+export async function unfollowUser(currentUserId: string, targetUserId: string) {
+    const currentUserRef = doc(db, 'users', currentUserId);
+    const targetUserRef = doc(db, 'users', targetUserId);
+
+    await updateDoc(currentUserRef, {
+        following: arrayRemove(targetUserId)
+    });
+
+    await updateDoc(targetUserRef, {
+        followers: arrayRemove(currentUserId)
+    });
 }

@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Post, User } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
+import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
 
 type PostCardProps = {
@@ -35,7 +36,15 @@ const renderContent = (content: string) => {
 };
 
 export function PostCard({ post, author }: PostCardProps) {
-  const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
+  const getPostDate = () => {
+    if (!post.createdAt) return new Date();
+    if (post.createdAt instanceof Timestamp) {
+      return post.createdAt.toDate();
+    }
+    return new Date(post.createdAt);
+  };
+  
+  const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
 
   return (
     <Card className="border-0 border-b rounded-none last:border-b-0">

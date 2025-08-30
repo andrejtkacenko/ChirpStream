@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
+import { followUser, unfollowUser } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
+
 
 type UserProfileCardProps = {
   user: User;
@@ -12,15 +15,45 @@ type UserProfileCardProps = {
 };
 
 export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
-  const { user: currentUser } = useAuth();
-  const isCurrentUser = user.id === currentUser?.uid;
+  const { appUser: currentUser, loading } = useAuth();
+  const { toast } = useToast();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(user.followers.length);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  const isCurrentUser = user.id === currentUser?.id;
 
-  // In a real app, this would come from the current user's data
-  const initialIsFollowing = false;
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  useEffect(() => {
+    if (currentUser) {
+      setIsFollowing(currentUser.following.includes(user.id));
+    }
+    setFollowersCount(user.followers.length);
+  }, [currentUser, user]);
+  
+  const toggleFollow = async () => {
+    if (!currentUser) {
+      toast({ title: "Please login to follow users.", variant: "destructive" });
+      return;
+    }
+    if (isProcessing) return;
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
+    setIsProcessing(true);
+    try {
+      if (isFollowing) {
+        await unfollowUser(currentUser.id, user.id);
+        setFollowersCount(prev => prev - 1);
+        setIsFollowing(false);
+      } else {
+        await followUser(currentUser.id, user.id);
+        setFollowersCount(prev => prev + 1);
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Failed to toggle follow:", error);
+      toast({ title: "Something went wrong.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -36,8 +69,12 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
       <div className="pt-20 px-6 pb-6 bg-card rounded-b-lg">
         <div className="flex justify-end">
           {!isCurrentUser && (
-            <Button variant={isFollowing ? "outline" : "default"} onClick={toggleFollow}>
-              {isFollowing ? "Following" : "Follow"}
+            <Button 
+              variant={isFollowing ? "outline" : "default"} 
+              onClick={toggleFollow}
+              disabled={loading || isProcessing}
+            >
+              {isProcessing ? "..." : isFollowing ? "Following" : "Follow"}
             </Button>
           )}
         </div>
@@ -54,7 +91,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
             <span className="font-bold text-foreground">{user.following.length}</span> Following
           </span>
           <span>
-            <span className="font-bold text-foreground">{user.followers.length + (isFollowing && !initialIsFollowing ? 1 : 0) - (!isFollowing && initialIsFollowing ? 1 : 0)}</span> Followers
+            <span className="font-bold text-foreground">{followersCount}</span> Followers
           </span>
         </div>
       </div>
