@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, Home, Mail, Search, User, Wind } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -12,21 +12,23 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { currentUser } from '@/lib/data'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { useAuth } from '@/context/auth-context'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
+  const { user, loading, logout } = useAuth();
+
   const isActive = (path: string) => pathname === path
 
-  const menuItems = [
+  const menuItems = user ? [
     { href: '/', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: Search },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/messages', label: 'Messages', icon: Mail },
-    { href: `/${currentUser.username}`, label: 'Profile', icon: User },
-  ]
+    { href: `/${user.username}`, label: 'Profile', icon: User },
+  ] : [];
 
   return (
     <>
@@ -40,7 +42,7 @@ export function MainSidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {menuItems.map((item) => (
+          {user && menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <Link href={item.href}>
                 <SidebarMenuButton
@@ -54,30 +56,46 @@ export function MainSidebarNav() {
               </Link>
             </SidebarMenuItem>
           ))}
+          {!user && !loading && (
+             <SidebarMenuItem>
+              <Link href="/login">
+                <SidebarMenuButton
+                  isActive={isActive('/login')}
+                  tooltip="Login"
+                  asChild={false}
+                >
+                  <LogIn />
+                  <span>Login</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start h-14">
-              <div className="flex justify-between items-center w-full">
-                <div className="flex gap-3 items-center">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                    <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-left hidden group-data-[state=expanded]:block">
-                    <p className="font-bold">{currentUser.name}</p>
-                    <p className="text-sm text-muted-foreground">@{currentUser.username}</p>
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start h-14">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex gap-3 items-center">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.photoURL ?? undefined} alt={user.displayName ?? ''} />
+                      <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-left hidden group-data-[state=expanded]:block">
+                      <p className="font-bold">{user.displayName}</p>
+                      <p className="text-sm text-muted-foreground">@{user.username}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
-            <DropdownMenuItem>Log out @{currentUser.username}</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
+              <DropdownMenuItem onClick={logout}>Log out @{user.username}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </SidebarFooter>
     </>
   )
