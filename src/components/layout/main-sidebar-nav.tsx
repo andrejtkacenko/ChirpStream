@@ -43,6 +43,17 @@ export function MainSidebarNav() {
     switchUser(user);
   }
 
+  const isActive = (href: string) => {
+    // Special case for the profile page, which has a dynamic route
+    if (href.startsWith('/')) {
+        const profilePattern = /^\/[^/]+$/;
+        if (profilePattern.test(href) && href.substring(1) === appUser?.username) {
+            return pathname === `/${appUser.username}`;
+        }
+    }
+    return pathname === href;
+  }
+
   return (
     <>
       <SidebarHeader>
