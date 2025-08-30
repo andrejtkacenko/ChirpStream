@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,10 +18,12 @@ export function PostActions({ post }: { post: Post }) {
   const [isProcessing, setIsProcessing] = useState(false);
   
   useEffect(() => {
-    if (appUser) {
+    if (appUser && post.likes) {
       setIsLiked(post.likes.includes(appUser.id));
     }
-    setLikes(post.likes.length);
+    if (post.likes) {
+      setLikes(post.likes.length);
+    }
   }, [post, appUser]);
 
   const handleLike = async (e: React.MouseEvent) => {
