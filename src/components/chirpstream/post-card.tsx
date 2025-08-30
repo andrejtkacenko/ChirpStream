@@ -113,10 +113,10 @@ export function PostCard({ post, author }: PostCardProps) {
   }
 
   return (
-    <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200" onClick={() => router.push(`/${author.username}/status/${post.id}`)}>
+    <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-transparent" onClick={() => router.push(`/${author.username}/status/${post.id}`)}>
       <CardContent className="p-4 flex gap-4">
         <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()}>
-          <Avatar>
+          <Avatar className="h-12 w-12">
             <AvatarImage src={author.avatar} alt={author.name} />
             <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
           </Avatar>

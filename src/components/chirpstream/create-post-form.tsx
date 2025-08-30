@@ -71,24 +71,24 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
 
   return (
     <div className="flex gap-4 p-4 border-b">
-      <Avatar>
+      <Avatar className="h-12 w-12">
         <AvatarImage src={appUser?.avatar ?? undefined} alt={appUser?.name ?? ""} />
         <AvatarFallback>{appUser?.name?.charAt(0) ?? 'U'}</AvatarFallback>
       </Avatar>
       <div className="w-full">
         <Textarea
           placeholder="What's happening?"
-          className="bg-transparent border-0 border-b rounded-none focus-visible:ring-0 focus:border-primary pb-2 px-0 resize-none"
+          className="bg-transparent border-0 border-b-0 focus-visible:ring-0 focus:border-primary pb-2 px-0 resize-none text-xl"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={isSubmitting}
           maxLength={maxChars}
         />
-        <div className="flex justify-end items-center mt-2 gap-4">
+        <div className="flex justify-end items-center mt-2 gap-4 border-t pt-4">
            <span className={cn("text-sm", charsLeft < 0 ? "text-destructive" : "text-muted-foreground")}>
             {charsLeft}
           </span>
-          <Button onClick={handleSubmit} disabled={!content.trim() || isSubmitting || charsLeft < 0}>
+          <Button onClick={handleSubmit} disabled={!content.trim() || isSubmitting || charsLeft < 0} className="rounded-full font-bold">
             {isSubmitting ? "Posting..." : "Post"}
           </Button>
         </div>

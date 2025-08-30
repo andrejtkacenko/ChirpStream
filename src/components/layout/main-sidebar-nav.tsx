@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -83,13 +83,14 @@ export function MainSidebarNav() {
                 <SidebarMenuItem key={item.label}>
                 <Link href={item.href}>
                     <SidebarMenuButton
+                    size="lg"
                     isActive={isActive(item.href)}
                     tooltip={item.label}
                     asChild={false}
-                    className={cn(sidebarState === 'collapsed' && 'justify-center')}
+                    className={cn("font-semibold", sidebarState === 'collapsed' && 'justify-center')}
                     >
-                    <item.icon />
-                    {sidebarState === 'expanded' && <span>{item.label}</span>}
+                    <item.icon className="h-6 w-6" />
+                    {sidebarState === 'expanded' && <span className="text-lg">{item.label}</span>}
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
@@ -110,9 +111,9 @@ export function MainSidebarNav() {
                 </SidebarMenuItem>
             )}
             </SidebarMenu>
-            <Button className={cn(sidebarState === 'collapsed' ? "w-10 h-10 p-0" : "w-full")}>
-              <span className={cn(sidebarState === 'collapsed' ? 'hidden' : 'block')}>Post</span>
-               <span className={cn(sidebarState === 'expanded' ? 'hidden' : 'block')}>+</span>
+            <Button size="lg" className={cn("rounded-full font-bold text-lg", sidebarState === 'collapsed' ? "w-12 h-12 p-0" : "w-full")}>
+              {sidebarState === 'expanded' && <span>Post</span>}
+              {sidebarState === 'collapsed' && <Feather className="h-6 w-6" />}
             </Button>
         </div>
       </SidebarContent>
@@ -120,7 +121,7 @@ export function MainSidebarNav() {
         {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={cn("w-full justify-start h-14", sidebarState === 'collapsed' ? "p-0 w-10 h-10" : "")}>
+              <Button variant="ghost" className={cn("w-full justify-start h-16", sidebarState === 'collapsed' ? "p-0 w-12 h-12" : "")}>
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
                     <Avatar className="h-10 w-10 shrink-0">

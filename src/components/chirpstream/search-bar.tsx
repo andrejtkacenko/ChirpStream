@@ -22,7 +22,7 @@ export function SearchBar() {
       <Input
         name="search"
         placeholder="Search ChirpStream"
-        className="pl-10 bg-muted border-none focus-visible:ring-primary focus-visible:ring-2"
+        className="pl-10 bg-secondary/50 border-none focus-visible:ring-primary focus-visible:ring-2 rounded-full"
       />
     </form>
   );

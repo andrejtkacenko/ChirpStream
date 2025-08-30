@@ -38,15 +38,17 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-        <div className="flex min-h-screen">
-          {showSidebar && <Sidebar>
-            <MainSidebarNav />
-          </Sidebar>}
-          <div className="flex-1 flex justify-center">
-              <div className="w-full max-w-5xl">
-                {children}
+        <div className="flex min-h-screen justify-center">
+            <div className="w-full max-w-7xl flex">
+              {showSidebar && <Sidebar>
+                <MainSidebarNav />
+              </Sidebar>}
+              <div className="flex-1 flex justify-center">
+                  <div className="w-full max-w-2xl">
+                    {children}
+                  </div>
               </div>
-          </div>
+            </div>
         </div>
       </SidebarProvider>
     </AppBody>
