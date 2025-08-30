@@ -53,8 +53,8 @@ function HomePageContent() {
 
 
   return (
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px]">
-        <main className="border-x">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_350px]">
+        <main className="border-x max-w-[600px] w-full">
           <div className="p-4 border-b flex items-center gap-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
              <SidebarTrigger className="md:hidden" />
             <h1 className="text-xl font-bold">Home</h1>
@@ -74,7 +74,7 @@ function HomePageContent() {
             </div>
           )}
         </main>
-        <aside className="hidden xl:block pt-6 pl-8">
+        <aside className="hidden xl:block pt-6 pl-6">
           <RightSidebar />
         </aside>
       </div>
