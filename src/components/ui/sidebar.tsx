@@ -206,7 +206,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col", 
+        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col bg-sidebar", 
           "transition-all duration-300 ease-in-out",
           state === 'collapsed' ? 'w-[--sidebar-width-icon]' : 'w-[--sidebar-width]',
           className
