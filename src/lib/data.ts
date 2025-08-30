@@ -37,6 +37,11 @@ export async function getUserByUsername(username: string): Promise<User | undefi
     return { id: userSnapshot.docs[0].id, ...userData } as User;
 }
 
+export async function updateUserPlan(userId: string, plan: 'free' | 'premium'): Promise<void> {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, { plan });
+}
+
 // --- Post Functions ---
 
 export async function getPosts(postIds?: string[]): Promise<Post[]> {

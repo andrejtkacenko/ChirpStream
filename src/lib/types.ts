@@ -8,6 +8,7 @@ export interface User {
   bio: string;
   following: string[];
   followers: string[];
+  plan: 'free' | 'premium';
 }
 
 export interface Post {

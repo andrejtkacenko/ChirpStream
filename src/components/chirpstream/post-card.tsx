@@ -7,6 +7,7 @@ import type { Post, User } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
+import { Crown } from "lucide-react";
 
 type PostCardProps = {
   post: Post;
@@ -60,6 +61,9 @@ export function PostCard({ post, author }: PostCardProps) {
             <Link href={`/${author.username}`} className="font-bold hover:underline">
               {author.name}
             </Link>
+             {author.plan === 'premium' && (
+                <Crown className="h-4 w-4 text-amber-400" />
+            )}
             <span className="text-muted-foreground">@{author.username}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground hover:underline">{timeAgo}</span>

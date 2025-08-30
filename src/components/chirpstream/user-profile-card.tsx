@@ -5,8 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
-import { followUser, unfollowUser } from "@/lib/data";
+import { followUser, unfollowUser, updateUserPlan } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { Crown } from "lucide-react";
 
 
 type UserProfileCardProps = {
@@ -15,7 +16,7 @@ type UserProfileCardProps = {
 };
 
 export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
-  const { appUser: currentUser, loading } = useAuth();
+  const { appUser: currentUser, loading, refreshAppUser } = useAuth();
   const { toast } = useToast();
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(user.followers.length);
@@ -56,6 +57,21 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
     }
   };
 
+  const handleUpgrade = async () => {
+    if (!isCurrentUser) return;
+    setIsProcessing(true);
+    try {
+        await updateUserPlan(user.id, 'premium');
+        await refreshAppUser();
+        toast({ title: "Congratulations!", description: "You are now a Premium user." });
+    } catch (error) {
+        console.error("Failed to upgrade plan:", error);
+        toast({ title: "Upgrade failed.", description: "Could not update your plan.", variant: "destructive" });
+    } finally {
+        setIsProcessing(false);
+    }
+  }
+
   return (
     <div>
       <div className="h-48 bg-muted rounded-t-lg relative">
@@ -68,7 +84,14 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
       </div>
       <div className="pt-20 px-6 pb-6 bg-card rounded-b-lg">
         <div className="flex justify-end">
-          {!isCurrentUser && (
+          {isCurrentUser ? (
+            user.plan === 'free' && (
+                <Button onClick={handleUpgrade} disabled={isProcessing}>
+                    <Crown className="mr-2 h-4 w-4" />
+                    Upgrade to Premium
+                </Button>
+            )
+          ) : (
             <Button 
               variant={isFollowing ? "outline" : "default"} 
               onClick={toggleFollow}
@@ -79,7 +102,14 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
           )}
         </div>
         <div>
-          <h2 className="text-2xl font-bold">{user.name}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">{user.name}</h2>
+            {user.plan === 'premium' && (
+                <div className="p-1 bg-gradient-to-tr from-amber-400 to-yellow-200 rounded-full">
+                    <Crown className="h-5 w-5 text-yellow-900" />
+                </div>
+            )}
+          </div>
           <p className="text-muted-foreground">@{user.username}</p>
         </div>
         <p className="mt-4 text-base">{user.bio}</p>

@@ -8,7 +8,10 @@ import { useAuth } from "@/context/auth-context";
 import { createPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
+const MAX_CHARS_FREE = 280;
+const MAX_CHARS_PREMIUM = 1000;
 
 export function CreatePostForm() {
   const { appUser } = useAuth();
@@ -17,9 +20,11 @@ export function CreatePostForm() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const maxChars = appUser?.plan === 'premium' ? MAX_CHARS_PREMIUM : MAX_CHARS_FREE;
+  const charsLeft = maxChars - content.length;
 
   const handleSubmit = async () => {
-    if (!content.trim() || !appUser) return;
+    if (!content.trim() || !appUser || content.length > maxChars) return;
     setIsSubmitting(true);
     try {
       await createPost(appUser.id, content);
@@ -55,9 +60,13 @@ export function CreatePostForm() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           disabled={isSubmitting}
+          maxLength={maxChars}
         />
-        <div className="flex justify-end mt-2">
-          <Button onClick={handleSubmit} disabled={!content.trim() || isSubmitting}>
+        <div className="flex justify-end items-center mt-2 gap-4">
+           <span className={cn("text-sm", charsLeft < 0 ? "text-destructive" : "text-muted-foreground")}>
+            {charsLeft}
+          </span>
+          <Button onClick={handleSubmit} disabled={!content.trim() || isSubmitting || charsLeft < 0}>
             {isSubmitting ? "Posting..." : "Post"}
           </Button>
         </div>
