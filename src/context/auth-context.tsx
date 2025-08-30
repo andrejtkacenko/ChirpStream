@@ -7,8 +7,6 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Toaster } from '@/components/ui/toaster';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -47,24 +45,6 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
         await setDoc(userRef, newUser);
         return newUser;
     }
-}
-
-function AppBody({ children }: { children: React.ReactNode }) {
-    const context = useContext(AuthContext);
-    let themeClass = '';
-    if (context?.appUser?.plan === 'premium') {
-        themeClass = 'premium';
-    } else if (context?.appUser?.plan === 'premium_plus') {
-        themeClass = 'premium-plus';
-    }
-
-
-    return (
-        <div className={cn("dark h-full", themeClass)}>
-            {children}
-            <Toaster />
-        </div>
-    )
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -139,6 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await fetchAppUserData(updatedUser);
       }
     }
+     if (user) { // Also refresh app user data if needed
+      const appUserData = await getOrCreateAppUser(user);
+      setAppUser(appUserData);
+    }
   }
 
   const switchUser = async (targetUser: FirebaseUser) => {
@@ -176,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      <AppBody>{children}</AppBody>
+      {children}
     </AuthContext.Provider>
   );
 }

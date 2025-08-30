@@ -97,6 +97,9 @@ function ConversationPageContent() {
             text: content,
             createdAt: new Date().toISOString(),
             sender: appUser,
+            likes: [],
+            replies: 0,
+            reposts: 0,
         }
 
         setMessages(prevMessages => [...prevMessages, optimisticMessage]);
@@ -105,7 +108,6 @@ function ConversationPageContent() {
             await sendMessage(conversationId as string, appUser.id, content);
         } catch (error) {
             console.error("Failed to send message:", error);
-            // Optional: remove optimistic message on failure or show error state
             setMessages(prevMessages => prevMessages.filter(m => m.id !== optimisticMessage.id));
         } finally {
             setIsSending(false);

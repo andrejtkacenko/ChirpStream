@@ -91,7 +91,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
     } else {
         return (
             <div className="flex gap-2">
-                <Button variant="outline" onClick={handleSendMessage} disabled={isProcessing}>
+                <Button variant="outline" size="icon" onClick={handleSendMessage} disabled={isProcessing}>
                     <Mail className="h-4 w-4" />
                 </Button>
                 <Button 
@@ -109,16 +109,16 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
 
   return (
     <div>
-      <div className="h-48 bg-muted rounded-t-lg relative">
-        <div className="absolute -bottom-16 left-6">
-          <Avatar className="h-32 w-32 border-4 border-background">
+      <div className="h-36 md:h-48 bg-muted rounded-t-lg relative">
+        <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-6">
+          <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
       </div>
-      <div className="pt-20 px-6 pb-6 bg-card rounded-b-lg">
-        <div className="flex justify-end">
+      <div className="pt-14 md:pt-20 px-4 md:px-6 pb-6 bg-card rounded-b-lg">
+        <div className="flex justify-end mb-4">
           {renderActionButtons()}
         </div>
         <div>
@@ -133,7 +133,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
           <p className="text-muted-foreground">@{user.username}</p>
         </div>
         <p className="mt-4 text-base">{user.bio}</p>
-        <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
           <span>
             <span className="font-bold text-foreground">{postCount}</span> Posts
           </span>

@@ -1,8 +1,9 @@
+
 'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -10,17 +11,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  useSidebar,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuLabel } from '../ui/dropdown-menu'
 import { useAuth } from '@/context/auth-context'
 import type { User as FirebaseUser } from 'firebase/auth'
+import { cn } from '@/lib/utils'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
   const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers } = useAuth();
+  const { state: sidebarState, toggleSidebar } = useSidebar();
 
   const menuItems = appUser ? [
     { href: '/', label: 'Home', icon: Home },
@@ -44,28 +49,35 @@ export function MainSidebarNav() {
   }
 
   const isActive = (href: string) => {
-    // Special case for the profile page, which has a dynamic route
+    if (href === '/') return pathname === '/';
     if (href.startsWith('/')) {
         const profilePattern = /^\/[^/]+$/;
         if (profilePattern.test(href) && href.substring(1) === appUser?.username) {
             return pathname === `/${appUser.username}`;
         }
     }
-    return pathname === href;
+    return pathname.startsWith(href);
   }
+  
+  const renderBrand = () => (
+    <Link href="/" className="flex items-center gap-2">
+      <Button variant="ghost" size="icon" aria-label="Home" className='shrink-0'>
+        <Wind className="w-6 h-6 text-primary" />
+      </Button>
+      {sidebarState === 'expanded' && <span className="text-xl font-bold">ChirpStream</span>}
+    </Link>
+  )
 
   return (
     <>
-      <SidebarHeader>
-        <Link href="/" className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" aria-label="Home">
-            <Wind className="w-6 h-6 text-primary" />
-          </Button>
-          <span className="text-xl font-bold">ChirpStream</span>
-        </Link>
+      <SidebarHeader className='p-4'>
+        <div className={cn("flex", sidebarState === 'expanded' ? "justify-between" : "justify-center")}>
+          {sidebarState === 'expanded' ? renderBrand() : <SidebarTrigger className='md:hidden' />}
+           <SidebarTrigger className={cn(sidebarState === 'expanded' ? 'block' : 'hidden md:block')} />
+        </div>
       </SidebarHeader>
-      <SidebarContent className="p-2 flex-grow">
-        <div className="flex flex-col justify-center h-full">
+      <SidebarContent className="p-4 flex-grow">
+        <div className="flex flex-col justify-between h-full">
             <SidebarMenu>
             {appUser && menuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
@@ -74,9 +86,10 @@ export function MainSidebarNav() {
                     isActive={isActive(item.href)}
                     tooltip={item.label}
                     asChild={false}
+                    className={cn(sidebarState === 'collapsed' && 'justify-center')}
                     >
                     <item.icon />
-                    <span>{item.label}</span>
+                    {sidebarState === 'expanded' && <span>{item.label}</span>}
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
@@ -88,31 +101,38 @@ export function MainSidebarNav() {
                     isActive={isActive('/login')}
                     tooltip="Login"
                     asChild={false}
+                    className={cn(sidebarState === 'collapsed' && 'justify-center')}
                     >
                     <LogIn />
-                    <span>Login</span>
+                    {sidebarState === 'expanded' && <span>Login</span>}
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
             )}
             </SidebarMenu>
+            <Button className={cn(sidebarState === 'collapsed' ? "w-10 h-10 p-0" : "w-full")}>
+              <span className={cn(sidebarState === 'collapsed' ? 'hidden' : 'block')}>Post</span>
+               <span className={cn(sidebarState === 'expanded' ? 'hidden' : 'block')}>+</span>
+            </Button>
         </div>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className='p-4'>
         {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-14">
+              <Button variant="ghost" className={cn("w-full justify-start h-14", sidebarState === 'collapsed' ? "p-0 w-10 h-10" : "")}>
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
                       <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="text-left hidden group-data-[state=expanded]:block">
-                      <p className="font-bold">{appUser.name}</p>
-                      <p className="text-sm text-muted-foreground">@{appUser.username}</p>
-                    </div>
+                    {sidebarState === 'expanded' && (
+                        <div className="text-left">
+                            <p className="font-bold">{appUser.name}</p>
+                            <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+                        </div>
+                    )}
                   </div>
                 </div>
               </Button>

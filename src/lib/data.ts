@@ -27,6 +27,7 @@ export async function getUsersByIds(ids: string[]): Promise<User[]> {
     const users: User[] = [];
     const batches: Promise<any>[] = [];
 
+    // Firestore 'in' query has a limit of 30 items.
     for (let i = 0; i < ids.length; i += 30) {
         const batchIds = ids.slice(i, i + 30);
         const usersRef = collection(db, 'users');
@@ -83,7 +84,6 @@ export async function updateUserPlan(userId: string, plan: 'free' | 'premium' | 
 
 // --- Post Functions ---
 
-// Gets all posts for the explore page
 export async function getPosts(count: number = 50): Promise<PostWithAuthor[]> {
     const postsCol = collection(db, 'posts');
     const q = query(postsCol, orderBy('createdAt', 'desc'), limit(count));
@@ -92,7 +92,6 @@ export async function getPosts(count: number = 50): Promise<PostWithAuthor[]> {
     return hydratePosts(postsList);
 }
 
-// Gets posts for a user's feed (their posts + posts from people they follow)
 export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]> {
     const user = await getUserById(userId);
     if (!user) return [];
@@ -100,13 +99,12 @@ export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]>
     const authorIds = [...user.following, userId];
     if (authorIds.length === 0) return [];
     
-    // Firestore 'in' query has a limit of 30, so we batch it
     const posts: Post[] = [];
     const batches = [];
     for (let i = 0; i < authorIds.length; i += 30) {
         const batchIds = authorIds.slice(i, i + 30);
         const postsRef = collection(db, 'posts');
-        const q = query(postsRef, where('authorId', 'in', batchIds), orderBy('createdAt', 'desc'), limit(50));
+        const q = query(postsRef, where('authorId', 'in', batchIds));
         batches.push(getDocs(q));
     }
     
@@ -117,14 +115,13 @@ export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]>
         })
     });
 
-    // Sort manually as Firestore doesn't guarantee order with 'in' queries
     posts.sort((a, b) => {
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as string).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as string).getTime();
         return dateB - dateA;
     });
 
-    return hydratePosts(posts);
+    return hydratePosts(posts.slice(0, 50));
 }
 
 
@@ -139,15 +136,17 @@ export async function getPostsByAuthor(authorId: string): Promise<PostWithAuthor
 
 export async function createPost(authorId: string, content: string): Promise<string> {
     const postsCol = collection(db, 'posts');
-    const newPost = {
+    const newPost: Omit<Post, 'id' | 'createdAt'> = {
       authorId,
       content,
-      createdAt: serverTimestamp(),
       likes: [],
       reposts: 0,
       replies: 0,
     };
-    const docRef = await addDoc(postsCol, newPost);
+    const docRef = await addDoc(postsCol, {
+        ...newPost,
+        createdAt: serverTimestamp()
+    });
     return docRef.id;
 }
 
@@ -168,8 +167,9 @@ export async function toggleLike(postId: string, userId: string) {
         throw new Error("Post not found");
     }
 
-    const post = postSnap.data() as Post;
-    const isLiked = post.likes.includes(userId);
+    const postData = postSnap.data();
+    const postLikes = postData.likes || [];
+    const isLiked = postLikes.includes(userId);
 
     if (isLiked) {
         await updateDoc(postRef, {
@@ -213,8 +213,6 @@ export async function searchUsers(searchTerm: string): Promise<User[]> {
   if (!searchTerm) return [];
   const lowerCaseTerm = searchTerm.toLowerCase();
   
-  // This is a very basic prefix search. 
-  // For a real-world app, a dedicated search service like Algolia or Elasticsearch is recommended.
   const usersRef = collection(db, 'users');
   const q = query(
     usersRef,
@@ -231,11 +229,7 @@ export async function searchUsers(searchTerm: string): Promise<User[]> {
 
 export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]> {
     if (!searchTerm) return [];
-
-    // Firestore does not support native full-text search. 
-    // This is a workaround and is NOT scalable.
-    // A real app would use a service like Algolia or Elasticsearch.
-    const allPosts = await getPosts(200); // Get a large number of recent posts
+    const allPosts = await getPosts(200); 
     const lowerCaseTerm = searchTerm.toLowerCase();
 
     const filteredPosts = allPosts.filter(post => 
@@ -250,7 +244,7 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
 
 export async function getConversationsForUser(userId: string): Promise<Conversation[]> {
     const convRef = collection(db, 'conversations');
-    const q = query(convRef, where('participants', 'array-contains', userId));
+    const q = query(convRef, where('participants', 'array-contains', userId), orderBy('lastMessage.timestamp', 'desc'));
     
     const querySnapshot = await getDocs(q);
     const conversations = querySnapshot.docs.map(doc => ({
@@ -258,7 +252,6 @@ export async function getConversationsForUser(userId: string): Promise<Conversat
         ...doc.data()
     } as Conversation));
 
-    // Hydrate participant details
     for (const conv of conversations) {
         conv.participantDetails = await getUsersByIds(conv.participants);
     }
@@ -271,13 +264,20 @@ export function getMessagesForConversation(conversationId: string, callback: (me
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
 
     const unsubscribe = onSnapshot(q, async (querySnapshot) => {
-        const messages = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Message));
+        const messages: Message[] = [];
+        querySnapshot.forEach(doc => {
+            messages.push({
+                id: doc.id,
+                ...doc.data()
+            } as Message)
+        });
 
-        // Hydrate sender details
         const senderIds = [...new Set(messages.map(m => m.senderId))];
+        if(senderIds.length === 0) {
+            callback(messages);
+            return;
+        }
+
         const senders = await getUsersByIds(senderIds);
         const sendersMap = new Map(senders.map(s => [s.id, s]));
 
@@ -307,20 +307,21 @@ export async function sendMessage(conversationId: string, senderId: string, text
     const messagesRef = collection(db, 'conversations', conversationId, 'messages');
     const conversationRef = doc(db, 'conversations', conversationId);
     
+    const timestamp = serverTimestamp();
+
     const newMessage = {
         senderId,
         text,
-        createdAt: serverTimestamp(),
+        createdAt: timestamp,
     };
 
     await addDoc(messagesRef, newMessage);
     
-    // Update the lastMessage on the conversation
     await updateDoc(conversationRef, {
         lastMessage: {
             text,
             senderId,
-            timestamp: serverTimestamp()
+            timestamp: timestamp
         }
     });
 }
@@ -328,29 +329,18 @@ export async function sendMessage(conversationId: string, senderId: string, text
 export async function findOrCreateConversation(userId1: string, userId2: string): Promise<string> {
     const conversationsRef = collection(db, 'conversations');
     
-    // Firestore doesn't support array-contains-all, so we query for one user and filter locally.
-    // This is okay for 1-on-1 chats.
-    const q = query(conversationsRef, where('participants', 'array-contains', userId1));
+    const q = query(conversationsRef, where('participants', '==', [userId1, userId2].sort()));
     
     const querySnapshot = await getDocs(q);
     
-    let existingConversation = null;
-    querySnapshot.forEach(doc => {
-        const conv = doc.data() as Conversation;
-        // Check if it's a 1-on-1 chat with exactly these two participants
-        if (conv.participants.length === 2 && conv.participants.includes(userId2)) {
-            existingConversation = { id: doc.id, ...conv };
-        }
-    });
-
-    if (existingConversation) {
-        return existingConversation.id;
+    if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].id;
     }
 
-    // No existing conversation, so create one
     const newConversation = {
-        participants: [userId1, userId2],
+        participants: [userId1, userId2].sort(),
         createdAt: serverTimestamp(),
+        lastMessage: null,
     };
     const docRef = await addDoc(conversationsRef, newConversation);
     return docRef.id;

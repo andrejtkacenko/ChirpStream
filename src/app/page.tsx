@@ -1,3 +1,4 @@
+
 "use client";
 
 import { CreatePostForm } from "@/components/chirpstream/create-post-form";
@@ -9,10 +10,11 @@ import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 function FeedSkeleton() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
       {[1, 2, 3].map((n) => (
         <div key={n} className="flex items-start gap-4 p-4 border-b">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -51,10 +53,11 @@ function HomePageContent() {
 
 
   return (
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-8">
-        <main>
-          <div className="p-4 border-b">
-            <h1 className="text-2xl font-bold">Home</h1>
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_350px]">
+        <main className="border-r">
+          <div className="p-4 border-b flex items-center gap-4">
+             <SidebarTrigger className="md:hidden" />
+            <h1 className="text-xl font-bold">Home</h1>
           </div>
           <CreatePostForm onPostCreated={loadFeed} />
           {feedLoading ? <FeedSkeleton /> : (
@@ -71,7 +74,7 @@ function HomePageContent() {
             </div>
           )}
         </main>
-        <aside className="hidden xl:block pt-6 pr-6">
+        <aside className="hidden md:block pt-6 pr-6">
           <RightSidebar />
         </aside>
       </div>
