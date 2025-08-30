@@ -41,7 +41,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <Container>
           <div className="flex min-h-screen">
-              {showSidebar && <Sidebar className="bg-sidebar">
+              {showSidebar && <Sidebar>
                 <MainSidebarNav />
               </Sidebar>}
               <div className="flex-1 flex">
@@ -55,3 +55,4 @@ export function MainLayout({ children }: { children: ReactNode }) {
     </AppBody>
   )
 }
+
