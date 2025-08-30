@@ -64,37 +64,39 @@ export function MainSidebarNav() {
           <span className="text-xl font-bold">ChirpStream</span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="p-2">
-        <SidebarMenu>
-          {appUser && menuItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <Link href={item.href}>
-                <SidebarMenuButton
-                  isActive={isActive(item.href)}
-                  tooltip={item.label}
-                  asChild={false}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-          {!appUser && !loading && (
-             <SidebarMenuItem>
-              <Link href="/login">
-                <SidebarMenuButton
-                  isActive={isActive('/login')}
-                  tooltip="Login"
-                  asChild={false}
-                >
-                  <LogIn />
-                  <span>Login</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          )}
-        </SidebarMenu>
+      <SidebarContent className="p-2 flex-grow">
+        <div className="flex flex-col justify-center h-full">
+            <SidebarMenu>
+            {appUser && menuItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                <Link href={item.href}>
+                    <SidebarMenuButton
+                    isActive={isActive(item.href)}
+                    tooltip={item.label}
+                    asChild={false}
+                    >
+                    <item.icon />
+                    <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
+            {!appUser && !loading && (
+                <SidebarMenuItem>
+                <Link href="/login">
+                    <SidebarMenuButton
+                    isActive={isActive('/login')}
+                    tooltip="Login"
+                    asChild={false}
+                    >
+                    <LogIn />
+                    <span>Login</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            )}
+            </SidebarMenu>
+        </div>
       </SidebarContent>
       <SidebarFooter>
         {appUser && (
