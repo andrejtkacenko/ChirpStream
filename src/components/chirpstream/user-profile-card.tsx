@@ -125,9 +125,7 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold">{user.name}</h2>
             {user.plan !== 'free' && (
-                <div className={`p-1 rounded-full ${user.plan === 'premium_plus' ? 'bg-gradient-to-tr from-purple-500 to-indigo-600' : 'bg-gradient-to-tr from-amber-400 to-yellow-200'}`}>
-                    <Crown className="h-5 w-5 text-yellow-900" />
-                </div>
+              <Crown className="h-5 w-5 text-primary" />
             )}
           </div>
           <p className="text-muted-foreground">@{user.username}</p>

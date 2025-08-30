@@ -126,13 +126,8 @@ export function PostCard({ post, author }: PostCardProps) {
             <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()} className="font-bold hover:underline">
               {author.name}
             </Link>
-            {author.plan === 'premium' && (
-              <Crown className="h-4 w-4 text-amber-400" />
-            )}
-             {author.plan === 'premium_plus' && (
-                <div className="p-0.5 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600">
-                    <Crown className="h-3 w-3 text-yellow-900" />
-                </div>
+            {(author.plan === 'premium' || author.plan === 'premium_plus') && (
+              <Crown className="h-4 w-4 text-primary" />
             )}
             <span className="text-muted-foreground">@{author.username}</span>
             <span className="text-muted-foreground">·</span>

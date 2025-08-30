@@ -66,8 +66,8 @@ export function PostActions({ post }: { post: Post }) {
       Icon: Heart,
       count: likes,
       label: "Like",
-      color: isLiked ? "text-red-500" : "hover:text-red-500",
-      bgColor: "hover:bg-red-500/10",
+      color: isLiked ? "text-destructive" : "hover:text-destructive",
+      bgColor: "hover:bg-destructive/10",
       onClick: handleLike,
       fillClass: isLiked ? "fill-current" : "",
     },
@@ -96,9 +96,8 @@ export function PostActions({ post }: { post: Post }) {
           {count !== undefined && (
             <span
               className={cn(
-                "text-sm text-muted-foreground group-hover:text-[var(--hover-color)]",
-                color,
-                isLiked && label === "Like" ? "text-red-500" : ""
+                "text-sm text-muted-foreground",
+                label === "Like" && isLiked ? color : "group-hover:"+color
               )}
             >
               {count > 0 ? count : ""}

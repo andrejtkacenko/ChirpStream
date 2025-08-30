@@ -132,12 +132,12 @@ function PremiumPageContent() {
                 <Card key={plan.name} className="flex flex-col">
                     <CardHeader>
                         <div className="flex items-center gap-2">
-                           <Crown className={`h-6 w-6 ${plan.name === 'Premium+' ? 'text-purple-400' : 'text-amber-400'}`} />
+                           <Crown className="h-6 w-6 text-primary" />
                            <CardTitle className="text-2xl">{plan.name}</CardTitle>
                         </div>
                         <CardDescription>
                             {plan.price}<span className="text-sm text-muted-foreground">{plan.priceDetails}</span>
-                            <span className="ml-2 inline-block bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full text-xs font-semibold">{plan.discount}</span>
+                            <span className="ml-2 inline-block bg-accent text-accent-foreground px-2 py-0.5 rounded-full text-xs font-semibold">{plan.discount}</span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow flex flex-col">
