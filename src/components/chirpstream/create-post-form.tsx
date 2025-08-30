@@ -24,7 +24,11 @@ export function CreatePostForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const maxChars = appUser ? MAX_CHARS[appUser.plan] : MAX_CHARS.free;
+  if (!appUser) {
+    return null; // Or a skeleton loader
+  }
+
+  const maxChars = MAX_CHARS[appUser.plan];
   const charsLeft = maxChars - content.length;
 
   const handleSubmit = async () => {
@@ -50,10 +54,6 @@ export function CreatePostForm() {
       setIsSubmitting(false);
     }
   };
-
-  if (!appUser) {
-    return null; // Or a skeleton loader
-  }
 
   return (
     <div className="flex gap-4 p-4 border-b">
