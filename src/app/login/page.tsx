@@ -27,7 +27,16 @@ export default function LoginPage() {
     if (prefillEmail) {
       setEmail(prefillEmail);
     }
-  }, [searchParams]);
+    const autoLogin = searchParams.get('autoLogin');
+    if (autoLogin === 'true' && prefillEmail) {
+        // This is a simplified auto-login for the prototype.
+        // In a real app, you would use stored tokens.
+        toast({
+            title: 'Switching Account',
+            description: `Please enter password for ${prefillEmail} to continue.`,
+        });
+    }
+  }, [searchParams, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

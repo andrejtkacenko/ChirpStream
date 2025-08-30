@@ -20,6 +20,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const CURRENT_USER_UID_KEY = 'firebase_current_user_uid';
+
 async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
     const userRef = doc(db, "users", firebaseUser.uid);
     const userSnap = await getDoc(userRef);
@@ -55,14 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       setLoading(true);
       if (firebaseUser) {
-        // This is the currently signed in user
+        
+        localStorage.setItem(CURRENT_USER_UID_KEY, firebaseUser.uid);
+
         setUser(firebaseUser);
         const appUserData = await getOrCreateAppUser(firebaseUser);
         setAppUser(appUserData);
 
         // Logic for multiple accounts
-        const storedUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
+        const storedUsersRaw = localStorage.getItem('firebase_users') || '[]';
+        const storedUsers = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
         const userExists = storedUsers.some((u: any) => u.uid === firebaseUser.uid);
+
         if (!userExists) {
             storedUsers.push({ 
                 uid: firebaseUser.uid, 
@@ -73,12 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('firebase_users', JSON.stringify(storedUsers));
         }
 
-        // We can't store full FirebaseUser objects in localStorage, so we store identifiers
-        // and "rehydrate" them. For this simple case, we'll just get all users again.
         const allStoredUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
         const firebaseUsers: FirebaseUser[] = allStoredUsers.map((u: any) => ({
             ...u,
-            // Re-add essential methods that are not in JSON
             getIdToken: () => Promise.resolve(''),
         })) as FirebaseUser[];
         
@@ -90,32 +93,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAppUsers(appUsersData);
 
       } else {
-        setUser(null);
-        setAppUser(null);
-        setUsers([]);
-        setAppUsers([]);
+        const lastUserUid = localStorage.getItem(CURRENT_USER_UID_KEY);
+        const allStoredUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
+        const userToSignIn = allStoredUsers.find((u: any) => u.uid === lastUserUid) || allStoredUsers[0];
+        
+        if (userToSignIn && (window.location.pathname !== '/login' && window.location.pathname !== '/signup')) {
+          router.push(`/login?email=${userToSignIn.email}&autoLogin=true`);
+        } else {
+            setUser(null);
+            setAppUser(null);
+            setUsers([]);
+            setAppUsers([]);
+        }
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const switchUser = async (targetUser: FirebaseUser) => {
-    // In a real multi-auth scenario, you'd use credentials or re-authentication
-    // to switch. For this prototype, we'll simulate by just setting the active user
-    // if they are in our list. This is not a real sign-in operation.
-    const userToSwitch = users.find(u => u?.uid === targetUser.uid);
-    if (userToSwitch) {
-        await firebaseSignOut(auth);
-        // This is a simplified login flow for the prototype
-        // In a real app, you would need to re-authenticate properly
-        router.push(`/login?email=${userToSwitch.email}`);
-    }
+    localStorage.setItem(CURRENT_USER_UID_KEY, targetUser.uid);
+    await firebaseSignOut(auth);
+    // The onAuthStateChanged listener will handle the redirection and "auto-login"
+    window.location.reload(); 
   };
 
   const logout = async (redirect = true) => {
     const currentUserUid = user?.uid;
+    localStorage.removeItem(CURRENT_USER_UID_KEY);
     await firebaseSignOut(auth);
     
     const allStoredUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
@@ -124,16 +130,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (redirect) {
         if (remainingUsers.length > 0) {
+            localStorage.setItem(CURRENT_USER_UID_KEY, remainingUsers[0].uid);
             router.push(`/login?email=${remainingUsers[0].email}`);
         } else {
             router.push('/login');
         }
+    } else {
+      setUser(null);
+      setAppUser(null);
+      setUsers([]);
+      setAppUsers([]);
     }
-    // Reset state
-    setUser(null);
-    setAppUser(null);
-    setUsers([]);
-    setAppUsers([]);
   };
 
   const value = { user, appUser, users, appUsers, loading, logout, switchUser };
