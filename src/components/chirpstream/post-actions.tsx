@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 export function PostActions({ post }: { post: Post }) {
   const { appUser, refreshAppUser } = useAuth();
   const { toast } = useToast();
-  const [likes, setLikes] = useState(post.likes.length);
+  const [likes, setLikes] = useState(post.likes?.length || 0);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isProcessingLike, setIsProcessingLike] = useState(false);
@@ -21,10 +21,10 @@ export function PostActions({ post }: { post: Post }) {
   
   useEffect(() => {
     if (appUser) {
-      setIsLiked(post.likes.includes(appUser.id));
+      setIsLiked(Array.isArray(post.likes) && post.likes.includes(appUser.id));
       setIsBookmarked(appUser.bookmarks?.includes(post.id) ?? false);
     }
-    setLikes(post.likes.length);
+    setLikes(post.likes?.length || 0);
   }, [post, appUser]);
 
   const handleLike = async (e: React.MouseEvent) => {
