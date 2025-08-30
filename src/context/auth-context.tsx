@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   
   const refreshAppUser = async () => {
-    if (user) {
+    if (user && !isEmailVerified) {
       await user.reload(); // Get latest user data from Firebase Auth
       const updatedUser = auth.currentUser;
       if (updatedUser) {
