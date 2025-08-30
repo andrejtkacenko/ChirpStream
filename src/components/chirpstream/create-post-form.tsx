@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -49,6 +50,10 @@ export function CreatePostForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (!appUser) {
+    return null; // Or a skeleton loader
+  }
 
   return (
     <div className="flex gap-4 p-4 border-b">
