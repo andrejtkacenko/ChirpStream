@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useAuth } from '@/context/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { MainLayout } from '../layout/main-layout';
@@ -26,16 +27,30 @@ function AuthLoader() {
 
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, isEmailVerified, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
+    if (loading) return;
 
-  if (loading || !user) {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!isEmailVerified && pathname !== '/verify-email') {
+      router.push('/verify-email');
+      return;
+    }
+
+    if (isEmailVerified && pathname === '/verify-email') {
+        router.push('/');
+    }
+
+  }, [user, isEmailVerified, loading, router, pathname]);
+
+  if (loading || !user || (!isEmailVerified && pathname !== '/verify-email')) {
     return <AuthLoader />;
   }
 

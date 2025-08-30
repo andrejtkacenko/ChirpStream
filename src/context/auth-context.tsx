@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/toaster';
 interface AuthContextType {
   user: FirebaseUser | null;
   appUser: User | null;
+  isEmailVerified: boolean;
   users: (FirebaseUser | null)[];
   appUsers: (User | null)[];
   loading: boolean;
@@ -49,11 +50,11 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
 }
 
 function AppBody({ children }: { children: React.ReactNode }) {
-    const { appUser } = useAuth();
+    const context = useContext(AuthContext);
     let themeClass = '';
-    if (appUser?.plan === 'premium') {
+    if (context?.appUser?.plan === 'premium') {
         themeClass = 'premium';
-    } else if (appUser?.plan === 'premium_plus') {
+    } else if (context?.appUser?.plan === 'premium_plus') {
         themeClass = 'premium-plus';
     }
 
@@ -69,6 +70,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<User | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [users, setUsers] = useState<(FirebaseUser | null)[]>([]);
   const [appUsers, setAppUsers] = useState<(User | null)[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchAppUserData = async (firebaseUser: FirebaseUser) => {
     const appUserData = await getOrCreateAppUser(firebaseUser);
     setAppUser(appUserData);
+    setIsEmailVerified(firebaseUser.emailVerified || firebaseUser.providerData.some(p => p.providerId === 'google.com'));
 
     // Logic for multiple accounts
     const storedUsersRaw = localStorage.getItem('firebase_users') || '[]';
@@ -119,25 +122,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAppUser(null);
         setUsers([]);
         setAppUsers([]);
+        setIsEmailVerified(false);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
   
   const refreshAppUser = async () => {
     if (user) {
-      const appUserData = await getOrCreateAppUser(user);
-      setAppUser(appUserData);
+      await user.reload(); // Get latest user data from Firebase Auth
+      const updatedUser = auth.currentUser;
+      if (updatedUser) {
+        setUser(updatedUser);
+        await fetchAppUserData(updatedUser);
+      }
     }
   }
 
   const switchUser = async (targetUser: FirebaseUser) => {
     setLoading(true);
     await firebaseSignOut(auth);
-    // This is a simplified "re-login" for the prototype
-    // In a real app you'd use credential management
     router.push(`/login?email=${encodeURIComponent(targetUser.email || '')}&autoLogin=true`);
   };
 
@@ -158,7 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (redirect) {
       if (remainingUsers.length > 0) {
-          // "Login" to the next available account
           router.push(`/login?email=${encodeURIComponent(remainingUsers[0].email || '')}&autoLogin=true`);
       } else {
           localStorage.removeItem('firebase_users');
@@ -167,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = { user, appUser, users, appUsers, loading, logout, switchUser, refreshAppUser };
+  const value = { user, appUser, isEmailVerified, users, appUsers, loading, logout, switchUser, refreshAppUser };
 
   return (
     <AuthContext.Provider value={value}>

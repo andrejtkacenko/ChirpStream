@@ -1,14 +1,18 @@
+
 "use client"
 
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { MainSidebarNav } from './main-sidebar-nav'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/auth-context'
+import { usePathname } from 'next/navigation'
 
 export function MainLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isEmailVerified } = useAuth();
+  const pathname = usePathname();
   
-  const showSidebar = !loading && user;
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
+  const showSidebar = !loading && user && isEmailVerified && !isAuthPage;
 
   return (
     <SidebarProvider>

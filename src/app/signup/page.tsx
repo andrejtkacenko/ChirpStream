@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -27,9 +29,15 @@ export default function SignupPage() {
       return;
     }
     setError(null);
+    setIsSubmitting(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      toast({
+        title: 'Account Created!',
+        description: 'A verification email has been sent. Please check your inbox.',
+      });
+      router.push('/verify-email');
     } catch (err: any) {
       setError(err.message);
       toast({
@@ -37,11 +45,14 @@ export default function SignupPage() {
         description: err.message,
         variant: 'destructive',
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
     const handleGoogleSignIn = async () => {
     setError(null);
+    setIsSubmitting(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
@@ -53,6 +64,8 @@ export default function SignupPage() {
         description: err.message,
         variant: 'destructive',
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -75,6 +88,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -85,6 +99,7 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
                <div className="space-y-2">
@@ -95,11 +110,12 @@ export default function SignupPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing up..." : "Sign Up"}
               </Button>
             </form>
              <div className="relative my-4">
@@ -112,7 +128,7 @@ export default function SignupPage() {
                 </span>
               </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isSubmitting}>
               Google
             </Button>
             <p className="mt-4 text-center text-sm text-muted-foreground">
