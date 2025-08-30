@@ -7,7 +7,7 @@ import { getPostsByAuthor, getUserByUsername } from "@/lib/data";
 import { UserProfileCard } from "@/components/chirpstream/user-profile-card";
 import { Separator } from "@/components/ui/separator";
 import { PostCard } from "@/components/chirpstream/post-card";
-import type { Post, User } from "@/lib/types";
+import type { PostWithAuthor } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,9 +55,11 @@ function ProfilePageContent() {
   const params = useParams();
   const { username } = params;
   const { user: authUser, loading: authLoading } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
-  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [userPosts, setUserPosts] = useState<PostWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // We are not storing the user in state, because the profile card is client-side and will fetch it.
+  // This component only cares about the posts.
 
   useEffect(() => {
     async function loadProfileData() {
@@ -68,29 +70,52 @@ function ProfilePageContent() {
             notFound();
         }
 
-        setUser(profileUser);
         const posts = await getPostsByAuthor(profileUser.id);
         setUserPosts(posts);
         setLoading(false);
     }
 
-    if (!authLoading && authUser) {
+    if (!authLoading) {
         loadProfileData();
     }
-  }, [username, authUser, authLoading]);
+  }, [username, authLoading]);
+  
+  const userForProfileCard = userPosts[0]?.author;
 
-  if (loading || authLoading || !user) {
-    return <ProfilePageSkeleton />;
+
+  if (loading || authLoading || !userForProfileCard) {
+    // A bit of a hack: if we don't have the user yet, let's try to fetch it for the card
+    // This covers cases where a user has no posts.
+    const ProfileUserFetcher = () => {
+      const [fetchedUser, setFetchedUser] = useState(null);
+      useEffect(() => {
+        if (typeof username === 'string' && !userForProfileCard) {
+          getUserByUsername(username).then(u => setFetchedUser(u as any));
+        }
+      }, [username, userForProfileCard]);
+
+      if (!fetchedUser) return <ProfilePageSkeleton />;
+      
+      return (
+         <div className="p-4 md:p-6">
+            <UserProfileCard user={fetchedUser} postCount={0} />
+            <Separator className="my-6" />
+            <h2 className="text-xl font-bold mb-4">Posts</h2>
+            <p className="text-muted-foreground text-center py-8">This user hasn't posted anything yet.</p>
+         </div>
+      )
+    }
+    return <ProfileUserFetcher />;
   }
   
   return (
     <div className="p-4 md:p-6">
-      <UserProfileCard user={user} postCount={userPosts.length} />
+      <UserProfileCard user={userForProfileCard} postCount={userPosts.length} />
       <Separator className="my-6" />
       <h2 className="text-xl font-bold mb-4">Posts</h2>
       <div className="flex flex-col gap-6">
-        {userPosts.map((post: Post) => (
-          <PostCard key={post.id} post={post} author={user} />
+        {userPosts.map((post) => (
+          <PostCard key={post.id} post={post} author={post.author} />
         ))}
         {userPosts.length === 0 && (
           <p className="text-muted-foreground text-center py-8">This user hasn't posted anything yet.</p>

@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/auth-context";
 import { createPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -33,12 +32,11 @@ function CreatePostFormSkeleton() {
 }
 
 
-export function CreatePostForm() {
+export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void }) {
   const { appUser, loading } = useAuth();
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
 
   if (loading || !appUser) {
     return <CreatePostFormSkeleton />;
@@ -57,8 +55,8 @@ export function CreatePostForm() {
         title: "Success!",
         description: "Your post has been created.",
       });
-      // A simple way to refresh the feed
-      router.refresh();
+      // Callback to refresh the feed
+      onPostCreated();
     } catch (error) {
       console.error("Failed to create post:", error);
       toast({

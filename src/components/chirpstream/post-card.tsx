@@ -1,9 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Post, User } from "@/lib/types";
+import type { Post, User, PostWithAuthor } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
@@ -33,8 +34,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 type PostCardProps = {
-  post: Post;
-  author: User;
+  post: PostWithAuthor;
+  author: User; // Author is now part of the post prop, but we keep it for consistency
 };
 
 const renderContent = (content: string) => {
@@ -72,7 +73,11 @@ export function PostCard({ post, author }: PostCardProps) {
     if (post.createdAt instanceof Timestamp) {
       return post.createdAt.toDate();
     }
-    return new Date(post.createdAt);
+    // Firestore Timestamps can be serialized to an object with seconds and nanoseconds
+    if (typeof post.createdAt === 'object' && 'seconds' in post.createdAt) {
+      return new Timestamp(post.createdAt.seconds, post.createdAt.nanoseconds).toDate();
+    }
+    return new Date(post.createdAt as string);
   };
 
   const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
@@ -108,9 +113,9 @@ export function PostCard({ post, author }: PostCardProps) {
   }
 
   return (
-    <Card className="border-0 border-b rounded-none last:border-b-0">
+    <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200" onClick={() => router.push(`/${author.username}/status/${post.id}`)}>
       <CardContent className="p-4 flex gap-4">
-        <Link href={`/${author.username}`}>
+        <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()}>
           <Avatar>
             <AvatarImage src={author.avatar} alt={author.name} />
             <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
@@ -118,7 +123,7 @@ export function PostCard({ post, author }: PostCardProps) {
         </Link>
         <div className="flex flex-col w-full">
           <div className="flex items-center gap-2 text-sm">
-            <Link href={`/${author.username}`} className="font-bold hover:underline">
+            <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()} className="font-bold hover:underline">
               {author.name}
             </Link>
             {author.plan === 'premium' && (
@@ -131,16 +136,16 @@ export function PostCard({ post, author }: PostCardProps) {
             )}
             <span className="text-muted-foreground">@{author.username}</span>
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground hover:underline">{timeAgo}</span>
+            <Link href={`/${author.username}/status/${post.id}`} onClick={(e) => e.stopPropagation()} className="text-muted-foreground hover:underline">{timeAgo}</Link>
             {isAuthor && (
               <div className="ml-auto">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                     {canEdit && <DropdownMenuItem onClick={() => setIsEditing(true)}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Edit</span>
@@ -156,7 +161,7 @@ export function PostCard({ post, author }: PostCardProps) {
           </div>
           
           {isEditing ? (
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                 <Textarea value={editedContent} onChange={e => setEditedContent(e.target.value)} className="text-base" />
                 <div className="flex justify-end gap-2">
                     <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
@@ -176,7 +181,7 @@ export function PostCard({ post, author }: PostCardProps) {
       </CardContent>
 
        <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
-        <AlertDialogContent>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -1,3 +1,4 @@
+
 import { Timestamp } from "firebase/firestore";
 
 export interface User {
@@ -15,8 +16,10 @@ export interface Post {
   id:string;
   authorId: string;
   content: string;
-  createdAt: Timestamp | string; // Allow both for client-side creation and server-side fetching
+  createdAt: Timestamp | string | { seconds: number, nanoseconds: number }; // Allow all possible shapes
   likes: string[]; // Array of user IDs who liked the post
   reposts: number;
   replies: number;
 }
+
+export type PostWithAuthor = Post & { author: User };
