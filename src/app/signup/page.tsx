@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,11 @@ export default function SignupPage() {
       router.push('/');
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: 'Sign Up Failed',
+        description: err.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -40,6 +47,11 @@ export default function SignupPage() {
       router.push('/');
     } catch (err: any) {
       setError(err.message);
+      toast({
+        title: 'Google Sign-In Failed',
+        description: err.message,
+        variant: 'destructive',
+      });
     }
   };
 

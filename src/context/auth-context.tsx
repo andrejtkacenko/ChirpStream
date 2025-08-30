@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getUserByUsername, currentUser } from '@/lib/data';
+import { getUserByUsername } from '@/lib/data';
 
 interface AppUser {
   uid: string;
@@ -29,24 +29,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         // In a real app, you'd fetch the user profile from your database
-        // For now, we'll find a mock user or default to the current user
-        const mockUser = getUserByUsername('alice'); // or some logic to map firebaseUser.uid to your user
-        if (mockUser) {
+        // For this demo, we'll try to find a mock user or create a new one
+        const username = firebaseUser.email?.split('@')[0] || 'newuser';
+        let appUser = getUserByUsername(username);
+
+        if (appUser) {
             setUser({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: mockUser.name,
-                photoURL: mockUser.avatar,
-                username: mockUser.username,
+                displayName: appUser.name,
+                photoURL: appUser.avatar,
+                username: appUser.username,
             });
         } else {
-            // Fallback for demonstration if no specific user is matched
+             // Fallback for demonstration if no specific user is matched
              setUser({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName || 'New User',
                 photoURL: firebaseUser.photoURL,
-                username: firebaseUser.email?.split('@')[0] || 'newuser'
+                username: username
             });
         }
       } else {

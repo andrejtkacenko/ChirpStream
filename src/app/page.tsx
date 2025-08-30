@@ -11,7 +11,7 @@ export default function Home() {
   const feedPosts = getPosts().filter(post => followedUserIds.includes(post.authorId) || post.authorId === currentUser.id);
 
   return (
-     <ProtectedRoute>
+    <ProtectedRoute>
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_350px] gap-8 p-4 md:p-6">
         <main>
           <h1 className="text-2xl font-bold mb-4">Home</h1>
