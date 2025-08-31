@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Home, Music as MusicIcon, Compass, Radio, Bell, Search } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 
 const musicTracks = [
   {
@@ -104,6 +105,36 @@ function MusicPageContent() {
                 <h1 className="text-2xl font-bold">Explore Music</h1>
                 <p className="text-muted-foreground">Discover new tracks and artists.</p>
             </div>
+            
+            <div className="p-4 space-y-4 border-b">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Search Music" className="pl-10" />
+                </div>
+                <nav className="flex flex-col space-y-1">
+                    <Button variant="ghost" className="justify-start font-semibold text-base">
+                        <Home className="mr-2 h-5 w-5" />
+                        Главная
+                    </Button>
+                    <Button variant="ghost" className="justify-start text-base">
+                        <MusicIcon className="mr-2 h-5 w-5" />
+                        Моя музыка
+                    </Button>
+                    <Button variant="ghost" className="justify-start text-base">
+                        <Compass className="mr-2 h-5 w-5" />
+                        Обзор
+                    </Button>
+                    <Button variant="ghost" className="justify-start text-base">
+                        <Radio className="mr-2 h-5 w-5" />
+                        Радио
+                    </Button>
+                    <Button variant="ghost" className="justify-start text-base">
+                         <Bell className="mr-2 h-5 w-5" />
+                        Обновления
+                    </Button>
+                </nav>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {musicTracks.map(track => (
                     <Card key={track.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedTrack(track)}>
