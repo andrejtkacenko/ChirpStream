@@ -53,9 +53,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
               <div className="flex-1 border-x max-w-[700px]">
                   {children}
               </div>
-              <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                <RightSidebar />
-              </aside>
+              {pathname === '/' && (
+                <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+                  <RightSidebar />
+                </aside>
+              )}
           </div>
         </div>
       </SidebarProvider>
