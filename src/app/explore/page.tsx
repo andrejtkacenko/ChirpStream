@@ -8,7 +8,6 @@ import { PostCard } from "@/components/chirpstream/post-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchBar } from "@/components/chirpstream/search-bar";
 import { Button } from "@/components/ui/button";
 import { Settings2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,9 +62,7 @@ function ExplorePageContent() {
     <main>
       <div className="p-4 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
         <div className="flex items-center justify-between">
-            <div className="flex-1">
-                <SearchBar />
-            </div>
+            <h1 className="text-xl font-bold">Explore</h1>
             <Button variant="ghost" size="icon" className="ml-4">
                 <Settings2 className="h-5 w-5" />
             </Button>

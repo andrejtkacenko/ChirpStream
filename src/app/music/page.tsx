@@ -7,9 +7,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward, Home, Music as MusicIcon, Compass, Radio, Bell, Search } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Home, Music as MusicIcon, Compass, Radio, Bell } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
 const musicTracks = [
@@ -130,10 +129,6 @@ function MusicPageContent() {
                         Обновления
                     </Button>
                 </nav>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Search Music" className="pl-10" />
-                </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
