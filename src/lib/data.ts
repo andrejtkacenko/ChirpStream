@@ -1,4 +1,5 @@
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -446,10 +447,17 @@ export async function createNotification(userId: string, actorId: string, type: 
 
 export async function getNotifications(userId: string): Promise<Notification[]> {
     const notificationsRef = collection(db, 'notifications');
-    const q = query(notificationsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
+    const q = query(notificationsRef, where('userId', '==', userId), limit(50));
     
     const snapshot = await getDocs(q);
-    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+    let notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+
+    // client-side sort
+    notifications.sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as any).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as any).getTime();
+        return dateB - dateA;
+    });
 
     // Hydrate with actor and post info
     const actorIds = [...new Set(notifications.map(n => n.actorId))];
