@@ -18,6 +18,8 @@ import  SettingsAccountPage from "./account-page";
 import  SettingsAppearancePage from "./appearance-page";
 import  SettingsNotificationsPage from "./notifications-page";
 import  SettingsDisplayPage from "./display-page";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
 
 const sidebarNavItems = [
@@ -56,29 +58,50 @@ const pageComponents: { [key: string]: React.ComponentType } = {
     display: SettingsDisplayPage,
 }
 
+function SettingsContent({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+    const ActivePageComponent = pageComponents[activeTab];
+    return (
+        <>
+            <DialogHeader className="p-6 pb-0">
+                <DialogTitle className="text-2xl">Settings</DialogTitle>
+                <DialogDescription>
+                    Manage your account settings and set e-mail preferences.
+                </DialogDescription>
+            </DialogHeader>
+            <Separator />
+            <div className="flex-grow flex overflow-hidden">
+                <aside className="hidden md:block w-1/5 border-r p-4">
+                    <SidebarNav items={sidebarNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
+                </aside>
+                <main className="flex-1 p-6 overflow-y-auto">
+                    {ActivePageComponent && <ActivePageComponent />}
+                </main>
+            </div>
+        </>
+    )
+}
+
 export function SettingsDialog({ children }: { children: React.ReactNode }) {
     const [activeTab, setActiveTab] = useState("profile");
-    const ActivePageComponent = pageComponents[activeTab];
+    const [open, setOpen] = useState(false);
+    const isMobile = useIsMobile();
+    
+    if (isMobile) {
+        return (
+             <Drawer open={open} onOpenChange={setOpen}>
+                <DrawerTrigger asChild>{children}</DrawerTrigger>
+                <DrawerContent className="h-[90vh] flex flex-col">
+                    <SettingsContent activeTab={activeTab} setActiveTab={setActiveTab} />
+                </DrawerContent>
+            </Drawer>
+        )
+    }
 
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="max-w-4xl h-[70vh] flex flex-col p-0">
-                <DialogHeader className="p-6 pb-0">
-                    <DialogTitle className="text-2xl">Settings</DialogTitle>
-                    <DialogDescription>
-                        Manage your account settings and set e-mail preferences.
-                    </DialogDescription>
-                </DialogHeader>
-                <Separator />
-                <div className="flex-grow flex overflow-hidden">
-                    <aside className="w-1/5 border-r p-4">
-                        <SidebarNav items={sidebarNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
-                    </aside>
-                    <main className="flex-1 p-6 overflow-y-auto">
-                        {ActivePageComponent && <ActivePageComponent />}
-                    </main>
-                </div>
+                <SettingsContent activeTab={activeTab} setActiveTab={setActiveTab} />
             </DialogContent>
         </Dialog>
     )

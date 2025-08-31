@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings, Music } from 'lucide-react'
 import {
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -63,72 +62,64 @@ export function MainSidebarNav() {
   
   return (
     <>
-      <SidebarHeader className="p-4">
-          <Link href="/" className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" aria-label="Home" className='shrink-0'>
-                  <Wind className="w-6 h-6 text-primary" />
-              </Button>
-              <span className='text-xl font-bold group-data-[collapsible=icon]:hidden'>ChirpStream</span>
-          </Link>
-      </SidebarHeader>
       <SidebarContent className="p-4">
-        <div className="flex flex-col justify-between h-full">
-            <SidebarMenu>
-            {appUser && menuItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                <Link href={item.href}>
-                    <SidebarMenuButton
-                    size="lg"
-                    isActive={isActive(item.href)}
-                    tooltip={{children: item.label}}
-                    asChild={false}
-                    className={cn("font-semibold justify-center xl:justify-start")}
-                    >
-                    <item.icon className="h-6 w-6" />
-                    <span className="text-lg hidden xl:flex">{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            ))}
-            {appUser && (
-              <SidebarMenuItem>
-                <SettingsDialog>
+          <SidebarMenu>
+          {appUser && menuItems.map((item) => (
+              <SidebarMenuItem key={item.label}>
+              <Link href={item.href}>
                   <SidebarMenuButton
-                    size="lg"
-                    isActive={pathname.startsWith('/settings')}
-                    tooltip={{children: "Settings"}}
-                    asChild={false}
-                    className="font-semibold justify-center xl:justify-start"
+                  size="lg"
+                  isActive={isActive(item.href)}
+                  tooltip={{children: item.label}}
+                  asChild={false}
+                  className={cn("font-semibold justify-center xl:justify-start")}
                   >
-                    <Settings className="h-6 w-6" />
-                    <span className="text-lg hidden xl:flex">Settings</span>
+                  <item.icon className="h-6 w-6" />
+                  <span className="text-lg hidden xl:flex">{item.label}</span>
                   </SidebarMenuButton>
-                </SettingsDialog>
+              </Link>
               </SidebarMenuItem>
-            )}
-            {!appUser && !loading && (
-                <SidebarMenuItem>
-                <Link href="/login">
-                    <SidebarMenuButton
-                    isActive={isActive('/login')}
-                    tooltip={{children: "Login"}}
-                    asChild={false}
-                    className={cn('justify-center xl:justify-start')}
-                    >
-                    <LogIn />
-                    <span className='hidden xl:flex'>Login</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-            )}
-            </SidebarMenu>
-            <Button size="lg" className="rounded-full font-bold text-lg w-full xl:w-full w-12 h-12 p-0 xl:h-auto xl:p-2">
-              <span className='hidden xl:flex'>Post</span>
-              <Feather className="h-6 w-6 flex xl:hidden" />
+          ))}
+          {appUser && (
+            <SidebarMenuItem>
+              <SettingsDialog>
+                <SidebarMenuButton
+                  size="lg"
+                  isActive={pathname.startsWith('/settings')}
+                  tooltip={{children: "Settings"}}
+                  asChild={false}
+                  className="font-semibold justify-center xl:justify-start"
+                >
+                  <Settings className="h-6 w-6" />
+                  <span className="text-lg hidden xl:flex">Settings</span>
+                </SidebarMenuButton>
+              </SettingsDialog>
+            </SidebarMenuItem>
+          )}
+          {!appUser && !loading && (
+              <SidebarMenuItem>
+              <Link href="/login">
+                  <SidebarMenuButton
+                  isActive={isActive('/login')}
+                  tooltip={{children: "Login"}}
+                  asChild={false}
+                  className={cn('justify-center xl:justify-start')}
+                  >
+                  <LogIn />
+                  <span className='hidden xl:flex'>Login</span>
+                  </SidebarMenuButton>
+              </Link>
+              </SidebarMenuItem>
+          )}
+          </SidebarMenu>
+          {appUser && (
+            <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4 xl:w-full w-12 h-12 p-0 xl:h-auto xl:p-2">
+                <span className='hidden xl:flex'>Post</span>
+                <Feather className="h-6 w-6 flex xl:hidden" />
             </Button>
-        </div>
+          )}
       </SidebarContent>
-      <SidebarFooter className='p-4'>
+      <SidebarFooter className='p-4 mt-auto'>
         {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
