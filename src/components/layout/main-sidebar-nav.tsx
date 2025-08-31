@@ -25,8 +25,7 @@ export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
   const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers } = useAuth();
-  const { state: sidebarState, toggleSidebar } = useSidebar();
-
+  
   const menuItems = appUser ? [
     { href: '/', label: 'Home', icon: Home },
     { href: '/explore', label: 'Explore', icon: Search },
@@ -65,14 +64,14 @@ export function MainSidebarNav() {
       <Button variant="ghost" size="icon" aria-label="Home" className='shrink-0'>
         <Wind className="w-6 h-6 text-primary" />
       </Button>
-      {sidebarState === 'expanded' && <span className="text-xl font-bold">ChirpStream</span>}
+      <span className="text-xl font-bold hidden xl:flex">ChirpStream</span>
     </Link>
   )
 
   return (
     <>
       <SidebarHeader className='p-4'>
-        <div className={cn("flex", sidebarState === 'expanded' ? "justify-between" : "justify-center")}>
+        <div className="flex xl:justify-start justify-center">
           {renderBrand()}
         </div>
       </SidebarHeader>
@@ -87,10 +86,10 @@ export function MainSidebarNav() {
                     isActive={isActive(item.href)}
                     tooltip={{children: item.label}}
                     asChild={false}
-                    className={cn("font-semibold", sidebarState === 'collapsed' && 'justify-center')}
+                    className={cn("font-semibold justify-center xl:justify-start")}
                     >
                     <item.icon className="h-6 w-6" />
-                    {sidebarState === 'expanded' && <span className="text-lg">{item.label}</span>}
+                    <span className="text-lg hidden xl:flex">{item.label}</span>
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
@@ -102,18 +101,18 @@ export function MainSidebarNav() {
                     isActive={isActive('/login')}
                     tooltip={{children: "Login"}}
                     asChild={false}
-                    className={cn(sidebarState === 'collapsed' && 'justify-center')}
+                    className={cn('justify-center xl:justify-start')}
                     >
                     <LogIn />
-                    {sidebarState === 'expanded' && <span>Login</span>}
+                    <span className='hidden xl:flex'>Login</span>
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
             )}
             </SidebarMenu>
-            <Button size="lg" className={cn("rounded-full font-bold text-lg", sidebarState === 'collapsed' ? "w-12 h-12 p-0" : "w-full")}>
-              {sidebarState === 'expanded' && <span>Post</span>}
-              {sidebarState === 'collapsed' && <Feather className="h-6 w-6" />}
+            <Button size="lg" className="rounded-full font-bold text-lg w-full xl:w-full w-12 h-12 p-0 xl:h-auto xl:p-2">
+              <span className='hidden xl:flex'>Post</span>
+              <Feather className="h-6 w-6 flex xl:hidden" />
             </Button>
         </div>
       </SidebarContent>
@@ -121,19 +120,17 @@ export function MainSidebarNav() {
         {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={cn("w-full justify-start h-16", sidebarState === 'collapsed' ? "p-0 w-12 h-12" : "")}>
+              <Button variant="ghost" className="w-full justify-start h-16 p-0 xl:p-2 justify-center xl:justify-start">
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
                       <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
                     </Avatar>
-                    {sidebarState === 'expanded' && (
-                        <div className="text-left">
-                            <p className="font-bold">{appUser.name}</p>
-                            <p className="text-sm text-muted-foreground">@{appUser.username}</p>
-                        </div>
-                    )}
+                    <div className="text-left hidden xl:block">
+                        <p className="font-bold">{appUser.name}</p>
+                        <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+                    </div>
                   </div>
                 </div>
               </Button>

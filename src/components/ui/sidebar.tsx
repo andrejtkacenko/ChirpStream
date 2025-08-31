@@ -172,7 +172,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col text-sidebar-foreground",
+            "flex h-full flex-col text-sidebar-foreground",
             className
           )}
           ref={ref}
@@ -206,9 +206,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col", 
-          "transition-all duration-300 ease-in-out",
-          state === 'collapsed' ? 'w-[--sidebar-width-icon]' : 'w-[--sidebar-width]',
+        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col h-full", 
           className
         )}
         data-state={state}
@@ -516,7 +514,7 @@ const SidebarMenuButton = React.forwardRef<
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
-    const { state, isMobile } = useSidebar()
+    const { isMobile } = useSidebar()
 
     const buttonContent = (
       <Comp
@@ -525,8 +523,6 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), 
-          state === 'collapsed' && size === 'default' && 'w-10 justify-center p-0',
-          state === 'collapsed' && size === 'lg' && 'w-10 h-10 justify-center p-0',
           className
         )}
         {...props}
@@ -546,7 +542,8 @@ const SidebarMenuButton = React.forwardRef<
         <TooltipContent
           side="right"
           align="center"
-          hidden={state !== "collapsed" || isMobile}
+          className="hidden group-data-[collapsible=icon]/sidebar-wrapper:block"
+          hidden={isMobile}
           {...tooltipProps}
         >
           {tooltipChildren}

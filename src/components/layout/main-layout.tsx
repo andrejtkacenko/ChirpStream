@@ -40,25 +40,27 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-        <Container>
-          <div className="flex min-h-screen">
-              {showSidebar && (
-                <Sidebar>
-                  <MainSidebarNav />
-                </Sidebar>
-              )}
-              <div className="flex-1 flex justify-center">
-                  <div className="w-full max-w-[900px] border-x">
-                    {children}
-                  </div>
-              </div>
-              {showSidebar && (
-                <aside className="hidden lg:block w-[350px] pt-6 pl-6 border-l">
-                  <RightSidebar />
-                </aside>
-              )}
-          </div>
-        </Container>
+        <div className="flex justify-center">
+            <div className="flex min-h-screen w-full max-w-screen-xl">
+                {showSidebar && (
+                    <aside className="w-auto xl:w-[275px] shrink-0">
+                        <Sidebar className="sticky top-0">
+                          <MainSidebarNav />
+                        </Sidebar>
+                    </aside>
+                )}
+                <div className="flex-1 flex justify-center">
+                    <div className="w-full max-w-[600px] border-x">
+                      {children}
+                    </div>
+                </div>
+                {showSidebar && (
+                  <aside className="hidden lg:block w-[350px] pt-6 pl-6">
+                    <RightSidebar />
+                  </aside>
+                )}
+            </div>
+        </div>
       </SidebarProvider>
     </AppBody>
   )
