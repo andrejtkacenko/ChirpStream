@@ -54,11 +54,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
               <div className="w-full max-w-[700px] border-x min-w-0">
                   {children}
               </div>
-              {isHomePage && (
-                <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                  <RightSidebar />
-                </aside>
-              )}
+              <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+                {isHomePage && <RightSidebar />}
+              </aside>
           </div>
         </div>
       </SidebarProvider>
