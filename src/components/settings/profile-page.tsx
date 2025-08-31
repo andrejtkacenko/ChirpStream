@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +24,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
-import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
   username: z
@@ -43,7 +41,30 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-function ProfilePageContent() {
+function ProfileFormSkeleton() {
+    return (
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-full" />
+            </div>
+            <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-full" />
+            </div>
+            <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-4 w-full" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+        </div>
+    )
+}
+
+export default function SettingsProfilePage() {
   const { appUser, refreshAppUser, loading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +77,12 @@ function ProfilePageContent() {
       bio: appUser?.bio || "",
       avatar: appUser?.avatar || "",
     },
+    values: appUser ? {
+      username: appUser.username,
+      name: appUser.name,
+      bio: appUser.bio || "",
+      avatar: appUser.avatar || ""
+    } : undefined,
     mode: "onChange",
   });
 
@@ -88,13 +115,6 @@ function ProfilePageContent() {
   
   return (
     <div className="space-y-6">
-        <div>
-            <h3 className="text-lg font-medium">Profile</h3>
-            <p className="text-sm text-muted-foreground">
-                This is how others will see you on the site.
-            </p>
-        </div>
-        <Separator />
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
@@ -181,40 +201,4 @@ function ProfilePageContent() {
         </Form>
     </div>
   );
-}
-
-function ProfileFormSkeleton() {
-    return (
-        <div className="space-y-6">
-             <div>
-                <h3 className="text-lg font-medium">Profile</h3>
-                <p className="text-sm text-muted-foreground">
-                    This is how others will see you on the site.
-                </p>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-4 w-full" />
-            </div>
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-4 w-full" />
-            </div>
-            <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-4 w-full" />
-            </div>
-            <Skeleton className="h-10 w-32" />
-        </div>
-    )
-}
-
-export default function SettingsProfilePage() {
-    return (
-        <ProfilePageContent />
-    )
 }

@@ -1,22 +1,19 @@
 
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: {
-    href: string;
+    id: string;
     title: string;
   }[];
+  activeTab: string;
+  setActiveTab: (id: string) => void;
 }
 
-export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
-  const pathname = usePathname();
-
+export function SidebarNav({ className, items, activeTab, setActiveTab, ...props }: SidebarNavProps) {
   return (
     <nav
       className={cn(
@@ -26,19 +23,19 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
       {...props}
     >
       {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
+        <button
+          key={item.id}
+          onClick={() => setActiveTab(item.id)}
           className={cn(
             buttonVariants({ variant: "ghost" }),
-            pathname === item.href
+            activeTab === item.id
               ? "bg-muted hover:bg-muted"
               : "hover:bg-transparent hover:underline",
             "justify-start"
           )}
         >
           {item.title}
-        </Link>
+        </button>
       ))}
     </nav>
   );

@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/context/auth-context'
 import type { User as FirebaseUser } from 'firebase/auth'
 import { cn } from '@/lib/utils'
+import { SettingsDialog } from '../settings/settings-dialog'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
@@ -35,7 +36,6 @@ export function MainSidebarNav() {
     { href: '/music', label: 'Music', icon: Music },
     { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
-    { href: '/settings/profile', label: 'Settings', icon: Settings },
   ] : [];
 
   const handleAddAccount = () => {
@@ -71,7 +71,7 @@ export function MainSidebarNav() {
               <span className='text-xl font-bold group-data-[collapsible=icon]:hidden'>ChirpStream</span>
           </Link>
       </SidebarHeader>
-      <SidebarContent className="p-4 flex-grow">
+      <SidebarContent className="p-4">
         <div className="flex flex-col justify-between h-full">
             <SidebarMenu>
             {appUser && menuItems.map((item) => (
@@ -90,6 +90,22 @@ export function MainSidebarNav() {
                 </Link>
                 </SidebarMenuItem>
             ))}
+            {appUser && (
+              <SidebarMenuItem>
+                <SettingsDialog>
+                  <SidebarMenuButton
+                    size="lg"
+                    isActive={pathname.startsWith('/settings')}
+                    tooltip={{children: "Settings"}}
+                    asChild={false}
+                    className="font-semibold justify-center xl:justify-start"
+                  >
+                    <Settings className="h-6 w-6" />
+                    <span className="text-lg hidden xl:flex">Settings</span>
+                  </SidebarMenuButton>
+                </SettingsDialog>
+              </SidebarMenuItem>
+            )}
             {!appUser && !loading && (
                 <SidebarMenuItem>
                 <Link href="/login">

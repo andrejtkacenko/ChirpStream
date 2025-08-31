@@ -18,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 
 const artistFormSchema = z.object({
@@ -65,13 +64,6 @@ export default function SettingsArtistPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-medium">Become an Artist</h3>
-                <p className="text-sm text-muted-foreground">
-                    Apply to get your artist profile on ChirpStream Music.
-                </p>
-            </div>
-            <Separator />
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <FormField
