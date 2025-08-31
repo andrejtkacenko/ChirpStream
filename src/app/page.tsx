@@ -54,7 +54,6 @@ function HomePageContent() {
   return (
       <main>
         <div className="p-4 border-b flex items-center gap-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-            <SidebarTrigger className="md:hidden" />
           <h1 className="text-xl font-bold">Home</h1>
         </div>
         <CreatePostForm onPostCreated={loadFeed} />
