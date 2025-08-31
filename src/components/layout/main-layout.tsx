@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { RightSidebar } from './right-sidebar'
 import { MainHeader } from './main-header'
 
-function AppBody({ children }: { children: React.ReactNode }) {
+function AppBody({ children }: { children: React.React.Node }) {
     const context = useAuth();
     let themeClass = '';
     if (context?.appUser?.plan === 'premium') {
@@ -50,7 +50,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <MainSidebarNav />
                   </Sidebar>
               </aside>
-              <div className="flex-1 border-x max-w-[700px]">
+              <div className={cn("flex-1 border-x", pathname === '/' ? "max-w-[700px]" : "max-w-[1050px]")}>
                   {children}
               </div>
               {pathname === '/' && (
