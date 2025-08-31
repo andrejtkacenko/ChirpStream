@@ -47,3 +47,16 @@ export interface Message {
      // Hydrated fields
     sender?: User;
 }
+
+export interface Notification {
+  id: string;
+  userId: string; // The user receiving the notification
+  actorId: string; // The user who performed the action
+  type: 'follow' | 'like' | 'reply' | 'repost';
+  postId?: string; // The post related to the notification
+  createdAt: Timestamp;
+  read: boolean;
+  // Hydrated fields
+  actor?: User;
+  post?: PostWithAuthor;
+}

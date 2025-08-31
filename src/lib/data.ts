@@ -1,7 +1,7 @@
 
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User, Post, PostWithAuthor, Conversation, Message } from './types';
+import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
 
 // --- User Functions ---
 
@@ -83,6 +83,16 @@ export async function updateUserPlan(userId: string, plan: 'free' | 'premium' | 
 }
 
 // --- Post Functions ---
+
+export async function getPost(id: string): Promise<Post | null> {
+    const postRef = doc(db, 'posts', id);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) {
+        return null;
+    }
+    return { id: postSnap.id, ...postSnap.data() } as Post;
+}
+
 
 export async function getPosts(count: number = 50): Promise<PostWithAuthor[]> {
     const postsCol = collection(db, 'posts');
@@ -211,10 +221,15 @@ export async function toggleLike(postId: string, userId: string) {
         await updateDoc(postRef, {
             likes: arrayRemove(userId)
         });
+        // Optionally, remove the notification
     } else {
         await updateDoc(postRef, {
             likes: arrayUnion(userId)
         });
+         // Create notification only if someone else's post is liked
+        if (postData.authorId !== userId) {
+            await createNotification(postData.authorId, userId, 'like', postId);
+        }
     }
 }
 
@@ -252,6 +267,8 @@ export async function followUser(currentUserId: string, targetUserId: string) {
     batch.update(targetUserRef, { followers: arrayUnion(currentUserId) });
     
     await batch.commit();
+
+    await createNotification(targetUserId, currentUserId, 'follow');
 }
 
 export async function unfollowUser(currentUserId: string, targetUserId: string) {
@@ -263,6 +280,8 @@ export async function unfollowUser(currentUserId: string, targetUserId: string) 
     batch.update(targetUserRef, { followers: arrayRemove(currentUserId) });
     
     await batch.commit();
+
+    // Optionally, remove the follow notification
 }
 
 // --- Search Functions ---
@@ -402,4 +421,64 @@ export async function findOrCreateConversation(userId1: string, userId2: string)
     };
     const docRef = await addDoc(conversationsRef, newConversation);
     return docRef.id;
+}
+
+
+// --- Notification Functions ---
+
+export async function createNotification(userId: string, actorId: string, type: Notification['type'], postId?: string): Promise<void> {
+    if (userId === actorId) return; // Don't notify for your own actions
+
+    const notificationCol = collection(db, 'notifications');
+    const newNotification: Omit<Notification, 'id' | 'createdAt'> = {
+        userId,
+        actorId,
+        type,
+        read: false,
+        ...(postId && { postId }),
+    };
+
+    await addDoc(notificationCol, {
+        ...newNotification,
+        createdAt: serverTimestamp()
+    });
+}
+
+export async function getNotifications(userId: string): Promise<Notification[]> {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(notificationsRef, where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(50));
+    
+    const snapshot = await getDocs(q);
+    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+
+    // Hydrate with actor and post info
+    const actorIds = [...new Set(notifications.map(n => n.actorId))];
+    const postIds = [...new Set(notifications.filter(n => n.postId).map(n => n.postId))] as string[];
+    
+    const [actors, posts] = await Promise.all([
+        getUsersByIds(actorIds),
+        postIds.length > 0 ? getPostsByIds(postIds) : Promise.resolve([])
+    ]);
+    
+    const actorsMap = new Map(actors.map(a => [a.id, a]));
+    const postsMap = new Map(posts.map(p => [p.id, p]));
+
+    return notifications.map(n => ({
+        ...n,
+        actor: actorsMap.get(n.actorId),
+        post: n.postId ? postsMap.get(n.postId) : undefined
+    }));
+}
+
+export async function markNotificationsAsRead(userId: string): Promise<void> {
+    const notificationsRef = collection(db, 'notifications');
+    const q = query(notificationsRef, where('userId', '==', userId), where('read', '==', false));
+    const snapshot = await getDocs(q);
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+        batch.update(doc.ref, { read: true });
+    });
+
+    await batch.commit();
 }
