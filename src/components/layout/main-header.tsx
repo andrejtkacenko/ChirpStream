@@ -16,7 +16,9 @@ export function MainHeader() {
                             <Wind className="w-6 h-6 text-primary" />
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-2 ml-4">
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon">
                             <Bell className="h-5 w-5" />
                         </Button>
@@ -24,9 +26,9 @@ export function MainHeader() {
                             <Music className="h-5 w-5" />
                         </Button>
                     </div>
-                </div>
-                <div className="w-64">
-                     <SearchBar />
+                    <div className="w-64">
+                        <SearchBar />
+                    </div>
                 </div>
             </div>
         </header>
