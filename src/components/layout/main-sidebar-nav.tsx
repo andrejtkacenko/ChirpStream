@@ -62,8 +62,6 @@ export function MainSidebarNav() {
   
   return (
     <>
-      <SidebarHeader className='p-4'>
-      </SidebarHeader>
       <SidebarContent className="p-4 flex-grow">
         <div className="flex flex-col justify-between h-full">
             <SidebarMenu>
