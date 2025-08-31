@@ -1,6 +1,6 @@
 
 
-import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
 
@@ -189,6 +189,7 @@ export async function createPost(authorId: string, content: string): Promise<str
       likes: [],
       reposts: 0,
       replies: 0,
+      repostedBy: [],
     };
     const docRef = await addDoc(postsCol, {
         ...newPost,
@@ -254,6 +255,33 @@ export async function toggleBookmark(postId: string, userId: string) {
             bookmarks: arrayUnion(postId)
         });
     }
+}
+
+
+export async function repostPost(postId: string, userId: string, doRepost: boolean): Promise<void> {
+    const postRef = doc(db, 'posts', postId);
+    
+    await runTransaction(db, async (transaction) => {
+        const postDoc = await transaction.get(postRef);
+        if (!postDoc.exists()) {
+            throw "Post does not exist!";
+        }
+
+        const repostedBy = postDoc.data().repostedBy || [];
+        const isReposted = repostedBy.includes(userId);
+
+        if (doRepost && !isReposted) {
+             transaction.update(postRef, { 
+                reposts: increment(1),
+                repostedBy: arrayUnion(userId)
+             });
+        } else if (!doRepost && isReposted) {
+            transaction.update(postRef, { 
+                reposts: increment(-1),
+                repostedBy: arrayRemove(userId)
+            });
+        }
+    });
 }
 
 
@@ -454,6 +482,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
 
     // client-side sort
     notifications.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as any).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as any).getTime();
         return dateB - dateA;

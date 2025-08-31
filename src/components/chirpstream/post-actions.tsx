@@ -2,29 +2,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Repeat, Share, Bookmark } from "lucide-react";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
-import { toggleLike, toggleBookmark } from "@/lib/data";
+import { toggleLike, toggleBookmark, repostPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 
 export function PostActions({ post }: { post: Post }) {
   const { appUser, refreshAppUser } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [likes, setLikes] = useState(post.likes?.length || 0);
+  const [reposts, setReposts] = useState(post.reposts || 0);
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isReposted, setIsReposted] = useState(false);
   const [isProcessingLike, setIsProcessingLike] = useState(false);
   const [isProcessingBookmark, setIsProcessingBookmark] = useState(false);
+  const [isProcessingRepost, setIsProcessingRepost] = useState(false);
   
   useEffect(() => {
     if (appUser) {
       setIsLiked(Array.isArray(post.likes) && post.likes.includes(appUser.id));
       setIsBookmarked(appUser.bookmarks?.includes(post.id) ?? false);
+      setIsReposted(Array.isArray(post.repostedBy) && post.repostedBy.includes(appUser.id));
     }
     setLikes(post.likes?.length || 0);
+    setReposts(post.reposts || 0);
   }, [post, appUser]);
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -69,6 +76,52 @@ export function PostActions({ post }: { post: Post }) {
     }
   };
 
+  const handleReply = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/${post.author.username}/status/${post.id}`);
+  }
+
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!appUser || isProcessingRepost) return;
+
+    setIsProcessingRepost(true);
+    const originalIsReposted = isReposted;
+    setIsReposted(!originalIsReposted);
+    setReposts(reposts + (!originalIsReposted ? 1 : -1));
+
+    try {
+        await repostPost(post.id, appUser.id, !originalIsReposted);
+    } catch (error) {
+        toast({ title: "Failed to repost.", variant: "destructive" });
+        setIsReposted(originalIsReposted);
+        setReposts(reposts);
+    } finally {
+        setIsProcessingRepost(false);
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/${post.author.username}/status/${post.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by @${post.author.username}`,
+          text: post.content,
+          url: shareUrl,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        toast({ title: "Could not share post.", variant: "destructive" });
+      }
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link copied to clipboard!" });
+    }
+  };
+
 
   const actions = [
     {
@@ -77,13 +130,17 @@ export function PostActions({ post }: { post: Post }) {
       label: "Reply",
       color: "hover:text-primary",
       bgColor: "hover:bg-primary/10",
+      onClick: handleReply,
     },
     {
       Icon: Repeat,
-      count: post.reposts,
+      count: reposts,
       label: "Repost",
-      color: "hover:text-green-500",
+      color: isReposted ? "text-green-500" : "hover:text-green-500",
       bgColor: "hover:bg-green-500/10",
+      onClick: handleRepost,
+      isProcessing: isProcessingRepost,
+      fillClass: isReposted ? "fill-current" : "",
     },
     {
       Icon: Heart,
@@ -109,6 +166,7 @@ export function PostActions({ post }: { post: Post }) {
       label: "Share",
       color: "hover:text-primary",
       bgColor: "hover:bg-primary/10",
+      onClick: handleShare,
     },
   ];
 
@@ -130,7 +188,9 @@ export function PostActions({ post }: { post: Post }) {
             <span
               className={cn(
                 "text-sm text-muted-foreground",
-                label === "Like" && isLiked ? "text-destructive" : "group-hover:" + color.replace('hover:','')
+                (label === "Like" && isLiked && "text-destructive") ||
+                (label === "Repost" && isReposted && "text-green-500") ||
+                ("group-hover:" + color.replace('hover:',''))
               )}
             >
               {count > 0 ? count : ""}

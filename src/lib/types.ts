@@ -21,6 +21,7 @@ export interface Post {
   likes: string[]; // Array of user IDs who liked the post
   reposts: number;
   replies: number;
+  repostedBy?: string[];
 }
 
 export type PostWithAuthor = Post & { author: User };
