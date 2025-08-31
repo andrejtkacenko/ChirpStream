@@ -1,5 +1,6 @@
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -441,6 +442,9 @@ export async function sendMessage(conversationId: string, senderId: string, text
         senderId,
         text,
         createdAt: timestamp,
+        likes: [],
+        replies: 0,
+        reposts: 0,
     };
 
     await addDoc(messagesRef, newMessage);

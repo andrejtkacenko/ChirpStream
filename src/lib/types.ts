@@ -48,6 +48,9 @@ export interface Message {
     createdAt: Timestamp | { seconds: number, nanoseconds: number } | string;
      // Hydrated fields
     sender?: User;
+    likes: string[];
+    replies: number;
+    reposts: number;
 }
 
 export interface Notification {
