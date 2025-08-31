@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 type PostCardProps = {
   post: PostWithAuthor;
@@ -168,6 +169,17 @@ export function PostCard({ post, author }: PostCardProps) {
                 <div className="text-base mt-1 whitespace-pre-wrap">
                     {renderContent(post.content)}
                 </div>
+                {post.imageUrl && (
+                    <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                        <Image 
+                            src={post.imageUrl} 
+                            alt="Post image" 
+                            width={600} 
+                            height={400}
+                            className="rounded-2xl border object-cover w-full" 
+                        />
+                    </div>
+                )}
                 <PostActions post={post} />
             </>
           )}

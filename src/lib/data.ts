@@ -197,7 +197,7 @@ export async function getPostsByAuthor(authorId: string): Promise<PostWithAuthor
     return hydratePosts(postsList);
 }
 
-export async function createPost(authorId: string, content: string): Promise<string> {
+export async function createPost(authorId: string, content: string, imageUrl?: string): Promise<string> {
     const postsCol = collection(db, 'posts');
     const newPost: Omit<Post, 'id' | 'createdAt'> = {
       authorId,
@@ -207,6 +207,11 @@ export async function createPost(authorId: string, content: string): Promise<str
       replies: 0,
       repostedBy: [],
     };
+
+    if (imageUrl) {
+      newPost.imageUrl = imageUrl;
+    }
+
     const docRef = await addDoc(postsCol, {
         ...newPost,
         createdAt: serverTimestamp()
@@ -498,7 +503,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
 
     // client-side sort
     notifications.sort((a, b) => {
-        if (!a.createdAt || !b.createdAt) return 0;
+        if (!a.createdAt) return 0;
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as any).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as any).getTime();
         return dateB - dateA;

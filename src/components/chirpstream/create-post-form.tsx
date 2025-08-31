@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,8 @@ import { createPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Image as ImageIcon, X } from "lucide-react";
+import Image from "next/image";
 
 const MAX_CHARS = {
   free: 280,
@@ -35,8 +37,11 @@ function CreatePostFormSkeleton() {
 export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void }) {
   const { appUser, loading } = useAuth();
   const [content, setContent] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   if (loading || !appUser) {
     return <CreatePostFormSkeleton />;
@@ -45,17 +50,31 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
   const maxChars = MAX_CHARS[appUser.plan] || MAX_CHARS.free;
   const charsLeft = maxChars - content.length;
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result as string);
+        }
+        reader.readAsDataURL(file);
+    }
+  }
+
   const handleSubmit = async () => {
-    if (!content.trim() || !appUser || content.length > maxChars) return;
+    if ((!content.trim() && !imagePreview) || !appUser || content.length > maxChars) return;
     setIsSubmitting(true);
     try {
-      await createPost(appUser.id, content);
+      await createPost(appUser.id, content, imagePreview ?? undefined);
       setContent("");
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       toast({
         title: "Success!",
         description: "Your post has been created.",
       });
-      // Callback to refresh the feed
       onPostCreated();
     } catch (error) {
       console.error("Failed to create post:", error);
@@ -84,13 +103,37 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
           disabled={isSubmitting}
           maxLength={maxChars}
         />
-        <div className="flex justify-end items-center mt-2 gap-4 border-t pt-4">
-           <span className={cn("text-sm", charsLeft < 0 ? "text-destructive" : "text-muted-foreground")}>
-            {charsLeft}
-          </span>
-          <Button onClick={handleSubmit} disabled={!content.trim() || isSubmitting || charsLeft < 0} className="rounded-full font-bold">
-            {isSubmitting ? "Posting..." : "Post"}
-          </Button>
+        {imagePreview && (
+          <div className="mt-4 relative">
+             <Image src={imagePreview} alt="Image preview" width={500} height={300} className="rounded-lg object-cover w-full max-h-80" />
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 rounded-full"
+                onClick={() => {
+                    setImagePreview(null);
+                     if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                    }
+                }}
+            >
+                <X className="h-5 w-5 text-white" />
+             </Button>
+          </div>
+        )}
+        <div className="flex justify-between items-center mt-2 border-t pt-4">
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" />
+            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+                <ImageIcon className="h-6 w-6 text-primary" />
+            </Button>
+            <div className="flex items-center gap-4">
+                <span className={cn("text-sm", charsLeft < 0 ? "text-destructive" : "text-muted-foreground")}>
+                    {charsLeft}
+                </span>
+                <Button onClick={handleSubmit} disabled={(!content.trim() && !imagePreview) || isSubmitting || charsLeft < 0} className="rounded-full font-bold">
+                    {isSubmitting ? "Posting..." : "Post"}
+                </Button>
+            </div>
         </div>
       </div>
     </div>
