@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { UserProfileHoverCard } from "./user-profile-hover-card";
 
 type PostCardProps = {
   post: PostWithAuthor;
@@ -153,17 +154,21 @@ export function PostCard({ post, author }: PostCardProps) {
   return (
     <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-card" onClick={() => router.push(`/${author.username}/status/${post.id}`)}>
       <CardContent className="p-4 flex gap-4">
-        <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()}>
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={author.avatar} alt={author.name} />
-            <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-        </Link>
+        <UserProfileHoverCard user={author}>
+            <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()}>
+            <Avatar className="h-12 w-12">
+                <AvatarImage src={author.avatar} alt={author.name} />
+                <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            </Link>
+        </UserProfileHoverCard>
         <div className="flex flex-col w-full">
           <div className="flex items-center gap-2 text-sm">
-            <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()} className="font-bold hover:underline">
-              {author.name}
-            </Link>
+            <UserProfileHoverCard user={author}>
+                <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()} className="font-bold hover:underline">
+                {author.name}
+                </Link>
+            </UserProfileHoverCard>
             {(author.plan === 'premium' || author.plan === 'premium_plus') && (
               <Crown className="h-4 w-4 text-primary" />
             )}
