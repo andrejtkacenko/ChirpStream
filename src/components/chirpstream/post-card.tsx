@@ -33,6 +33,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type PostCardProps = {
   post: PostWithAuthor;
@@ -60,6 +61,42 @@ const renderContent = (content: string) => {
     return part;
   });
 };
+
+const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
+  const count = imageUrls.length;
+  if (count === 0) return null;
+
+  return (
+    <div
+      className={cn(
+        "mt-3 grid gap-1 rounded-2xl border overflow-hidden",
+        count === 1 && "grid-cols-1",
+        count === 2 && "grid-cols-2",
+        count === 3 && "grid-cols-2",
+        count === 4 && "grid-cols-2"
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {imageUrls.map((url, index) => {
+        let containerClassName = "";
+        if (count === 3 && index === 0) {
+          containerClassName = "row-span-2";
+        }
+        return (
+          <div key={index} className={cn("relative aspect-video", containerClassName)}>
+            <Image
+              src={url}
+              alt={`Post image ${index + 1}`}
+              fill
+              className="object-cover"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 
 export function PostCard({ post, author }: PostCardProps) {
   const { appUser } = useAuth();
@@ -169,16 +206,8 @@ export function PostCard({ post, author }: PostCardProps) {
                 <div className="text-base mt-1 whitespace-pre-wrap">
                     {renderContent(post.content)}
                 </div>
-                {post.imageUrl && (
-                    <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                        <Image 
-                            src={post.imageUrl} 
-                            alt="Post image" 
-                            width={600} 
-                            height={400}
-                            className="rounded-2xl border object-cover w-full" 
-                        />
-                    </div>
+                {post.imageUrls && post.imageUrls.length > 0 && (
+                  <PostImageGrid imageUrls={post.imageUrls} />
                 )}
                 <PostActions post={post} />
             </>

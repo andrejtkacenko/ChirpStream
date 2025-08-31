@@ -164,6 +164,7 @@ export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]>
     
     const posts: Post[] = [];
     const batches = [];
+    // Firestore 'in' query has a limit of 30 items in this version of the SDK.
     for (let i = 0; i < authorIds.length; i += 30) {
         const batchIds = authorIds.slice(i, i + 30);
         const postsRef = collection(db, 'posts');
@@ -197,7 +198,7 @@ export async function getPostsByAuthor(authorId: string): Promise<PostWithAuthor
     return hydratePosts(postsList);
 }
 
-export async function createPost(authorId: string, content: string, imageUrl?: string): Promise<string> {
+export async function createPost(authorId: string, content: string, imageUrls?: string[]): Promise<string> {
     const postsCol = collection(db, 'posts');
     const newPost: Omit<Post, 'id' | 'createdAt'> = {
       authorId,
@@ -208,8 +209,8 @@ export async function createPost(authorId: string, content: string, imageUrl?: s
       repostedBy: [],
     };
 
-    if (imageUrl) {
-      newPost.imageUrl = imageUrl;
+    if (imageUrls && imageUrls.length > 0) {
+      newPost.imageUrls = imageUrls;
     }
 
     const docRef = await addDoc(postsCol, {
@@ -503,7 +504,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
 
     // client-side sort
     notifications.sort((a, b) => {
-        if (!a.createdAt) return 0;
+        if (!a.createdAt || !b.createdAt) return 0;
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as any).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as any).getTime();
         return dateB - dateA;

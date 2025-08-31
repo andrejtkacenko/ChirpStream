@@ -19,6 +19,8 @@ const MAX_CHARS = {
   premium_plus: 4000
 };
 
+const MAX_IMAGES = 4;
+
 function CreatePostFormSkeleton() {
     return (
         <div className="flex gap-4 p-4 border-b">
@@ -37,7 +39,7 @@ function CreatePostFormSkeleton() {
 export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void }) {
   const { appUser, loading } = useAuth();
   const [content, setContent] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,23 +53,38 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
   const charsLeft = maxChars - content.length;
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result as string);
+    const files = e.target.files;
+    if (files) {
+        if (imagePreviews.length + files.length > MAX_IMAGES) {
+            toast({
+                title: "Too many images",
+                description: `You can only upload a maximum of ${MAX_IMAGES} images.`,
+                variant: "destructive"
+            });
+            return;
         }
-        reader.readAsDataURL(file);
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreviews(prev => [...prev, reader.result as string]);
+            }
+            reader.readAsDataURL(file);
+        })
     }
   }
 
+  const removeImage = (index: number) => {
+    setImagePreviews(previews => previews.filter((_, i) => i !== index));
+  }
+
   const handleSubmit = async () => {
-    if ((!content.trim() && !imagePreview) || !appUser || content.length > maxChars) return;
+    if ((!content.trim() && imagePreviews.length === 0) || !appUser || content.length > maxChars) return;
     setIsSubmitting(true);
     try {
-      await createPost(appUser.id, content, imagePreview ?? undefined);
+      await createPost(appUser.id, content, imagePreviews);
       setContent("");
-      setImagePreview(null);
+      setImagePreviews([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -103,34 +120,33 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
           disabled={isSubmitting}
           maxLength={maxChars}
         />
-        {imagePreview && (
-          <div className="mt-4 relative">
-             <Image src={imagePreview} alt="Image preview" width={500} height={300} className="rounded-lg object-cover w-full max-h-80" />
-             <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-2 right-2 bg-black/50 hover:bg-black/75 rounded-full"
-                onClick={() => {
-                    setImagePreview(null);
-                     if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                    }
-                }}
-            >
-                <X className="h-5 w-5 text-white" />
-             </Button>
+        {imagePreviews.length > 0 && (
+          <div className="mt-4 grid gap-2 grid-cols-2">
+            {imagePreviews.map((src, index) => (
+                <div key={index} className="relative">
+                    <Image src={src} alt={`Image preview ${index + 1}`} width={250} height={150} className="rounded-lg object-cover w-full h-full" />
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/75 rounded-full h-6 w-6"
+                        onClick={() => removeImage(index)}
+                    >
+                        <X className="h-4 w-4 text-white" />
+                    </Button>
+                </div>
+            ))}
           </div>
         )}
         <div className="flex justify-between items-center mt-2 border-t pt-4">
-            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" />
-            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting}>
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" multiple />
+            <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting || imagePreviews.length >= MAX_IMAGES}>
                 <ImageIcon className="h-6 w-6 text-primary" />
             </Button>
             <div className="flex items-center gap-4">
                 <span className={cn("text-sm", charsLeft < 0 ? "text-destructive" : "text-muted-foreground")}>
                     {charsLeft}
                 </span>
-                <Button onClick={handleSubmit} disabled={(!content.trim() && !imagePreview) || isSubmitting || charsLeft < 0} className="rounded-full font-bold">
+                <Button onClick={handleSubmit} disabled={(!content.trim() && imagePreviews.length === 0) || isSubmitting || charsLeft < 0} className="rounded-full font-bold">
                     {isSubmitting ? "Posting..." : "Post"}
                 </Button>
             </div>
