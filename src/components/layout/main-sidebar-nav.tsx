@@ -60,21 +60,9 @@ export function MainSidebarNav() {
     return pathname.startsWith(href);
   }
   
-  const renderBrand = () => (
-    <Link href="/" className="flex items-center gap-2">
-      <Button variant="ghost" size="icon" aria-label="Home" className='shrink-0'>
-        <Wind className="w-6 h-6 text-primary" />
-      </Button>
-      <span className="text-xl font-bold hidden xl:flex">ChirpStream</span>
-    </Link>
-  )
-
   return (
     <>
       <SidebarHeader className='p-4'>
-        <div className="flex xl:justify-start justify-center">
-          {renderBrand()}
-        </div>
       </SidebarHeader>
       <SidebarContent className="p-4 flex-grow">
         <div className="flex flex-col justify-between h-full">
