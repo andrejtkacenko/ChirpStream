@@ -83,6 +83,22 @@ export async function updateUserPlan(userId: string, plan: 'free' | 'premium' | 
     await updateDoc(userRef, { plan });
 }
 
+export async function updateUserProfile(
+    userId: string, 
+    data: { name?: string; username?: string; bio?: string; avatar?: string }
+): Promise<void> {
+    // Check for username uniqueness if it's being changed
+    if (data.username) {
+        const existingUser = await getUserByUsername(data.username);
+        if (existingUser && existingUser.id !== userId) {
+            throw new Error("Username already exists.");
+        }
+    }
+    
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, data);
+}
+
 // --- Post Functions ---
 
 export async function getPost(id: string): Promise<Post | null> {

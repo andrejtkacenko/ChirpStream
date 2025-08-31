@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -34,6 +34,7 @@ export function MainSidebarNav() {
     { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
+    { href: '/settings/profile', label: 'Settings', icon: Settings },
   ] : [];
 
   const handleAddAccount = () => {

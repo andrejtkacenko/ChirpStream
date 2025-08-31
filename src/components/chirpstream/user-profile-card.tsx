@@ -8,7 +8,7 @@ import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { followUser, unfollowUser, updateUserPlan, findOrCreateConversation } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Mail } from "lucide-react";
+import { Crown, Mail, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 
@@ -81,11 +81,10 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
 
   const renderActionButtons = () => {
     if (isCurrentUser) {
-        if (user.plan === 'premium_plus') return null;
-         return (
-            <Button onClick={() => router.push('/premium')} disabled={isProcessing}>
-                <Crown className="mr-2 h-4 w-4" />
-                {user.plan === 'free' ? 'Upgrade to Premium' : 'Upgrade to Premium+'}
+        return (
+            <Button variant="outline" onClick={() => router.push('/settings/profile')}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Profile
             </Button>
         )
     } else {
