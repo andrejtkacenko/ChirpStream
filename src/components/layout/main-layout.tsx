@@ -51,10 +51,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <MainSidebarNav />
                   </Sidebar>
               </aside>
-              <div className={cn(
-                "flex-1 border-x min-w-0",
-                isHomePage ? "max-w-[700px]" : "max-w-[1050px]"
-              )}>
+              <div className="w-full max-w-[700px] border-x min-w-0">
                   {children}
               </div>
               {isHomePage && (
