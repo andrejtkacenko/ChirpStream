@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings, Music } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings, Music, UploadCloud, Music4 } from 'lucide-react'
 import {
   SidebarContent,
   SidebarMenu,
@@ -33,6 +33,7 @@ export function MainSidebarNav() {
     { href: '/messages', label: 'Messages', icon: Mail },
     { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { href: '/music', label: 'Music', icon: Music },
+    { href: '/studio', label: 'Studio', icon: Music4 },
     { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
   ] : [];
