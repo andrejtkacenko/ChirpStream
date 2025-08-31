@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings, Music } from 'lucide-react'
 import {
   SidebarContent,
   SidebarHeader,
@@ -32,6 +32,7 @@ export function MainSidebarNav() {
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/messages', label: 'Messages', icon: Mail },
     { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
+    { href: '/music', label: 'Music', icon: Music },
     { href: '/premium', label: 'Premium', icon: Gem },
     { href: `/${appUser.username}`, label: 'Profile', icon: User },
     { href: '/settings/profile', label: 'Settings', icon: Settings },
@@ -62,6 +63,14 @@ export function MainSidebarNav() {
   
   return (
     <>
+      <SidebarHeader className="p-4">
+          <Link href="/" className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" aria-label="Home" className='shrink-0'>
+                  <Wind className="w-6 h-6 text-primary" />
+              </Button>
+              <span className='text-xl font-bold group-data-[collapsible=icon]:hidden'>ChirpStream</span>
+          </Link>
+      </SidebarHeader>
       <SidebarContent className="p-4 flex-grow">
         <div className="flex flex-col justify-between h-full">
             <SidebarMenu>
