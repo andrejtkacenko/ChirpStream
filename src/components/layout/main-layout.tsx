@@ -51,7 +51,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <MainSidebarNav />
                   </Sidebar>
               </aside>
-              <div className={cn("flex-1 border-x min-w-0", (pathname.startsWith('/messages') || !isHomePage) ? "max-w-[1050px]" : "max-w-[700px]")}>
+              <div className="flex-1 border-x min-w-0 max-w-[1050px]">
                   {children}
               </div>
               {isHomePage && (
