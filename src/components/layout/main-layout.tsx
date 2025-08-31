@@ -38,7 +38,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
     <AppBody>
       <SidebarProvider>
         <div className="mx-auto w-full max-w-screen-xl">
-            <div className="flex">
+            <div className="flex justify-center">
                 {showSidebar && (
                     <aside className="w-auto xl:w-[275px] shrink-0">
                         <Sidebar className="sticky top-0 h-screen">
@@ -46,11 +46,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
                         </Sidebar>
                     </aside>
                 )}
-                <div className="flex-1 border-x max-w-[600px]">
+                <div className="flex-1 border-x max-w-[700px]">
                     {children}
                 </div>
                 {showSidebar && (
-                  <aside className="hidden lg:block flex-1 pt-6 pl-6">
+                  <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
                     <RightSidebar />
                   </aside>
                 )}
