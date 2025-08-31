@@ -41,6 +41,8 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
             following: [],
             followers: [],
             plan: 'free',
+            isArtist: false,
+            bookmarks: [],
         };
         await setDoc(userRef, newUser);
         return newUser;

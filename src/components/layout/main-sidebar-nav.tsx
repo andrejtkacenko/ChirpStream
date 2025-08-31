@@ -27,15 +27,15 @@ export function MainSidebarNav() {
   const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers } = useAuth();
   
   const menuItems = appUser ? [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/explore', label: 'Explore', icon: Search },
-    { href: '/notifications', label: 'Notifications', icon: Bell },
-    { href: '/messages', label: 'Messages', icon: Mail },
-    { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
-    { href: '/music', label: 'Music', icon: Music },
-    { href: '/studio', label: 'Studio', icon: Music4 },
-    { href: '/premium', label: 'Premium', icon: Gem },
-    { href: `/${appUser.username}`, label: 'Profile', icon: User },
+    { href: '/', label: 'Home', icon: Home, requiredPlan: 'any' },
+    { href: '/explore', label: 'Explore', icon: Search, requiredPlan: 'any' },
+    { href: '/notifications', label: 'Notifications', icon: Bell, requiredPlan: 'any' },
+    { href: '/messages', label: 'Messages', icon: Mail, requiredPlan: 'any' },
+    { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark, requiredPlan: 'any' },
+    { href: '/music', label: 'Music', icon: Music, requiredPlan: 'any' },
+    { href: '/studio', label: 'Studio', icon: Music4, requiredArtist: true },
+    { href: '/premium', label: 'Premium', icon: Gem, requiredPlan: 'any' },
+    { href: `/${appUser.username}`, label: 'Profile', icon: User, requiredPlan: 'any' },
   ] : [];
 
   const handleAddAccount = () => {
@@ -65,7 +65,11 @@ export function MainSidebarNav() {
     <>
       <SidebarContent className="p-4">
           <SidebarMenu>
-          {appUser && menuItems.map((item) => (
+          {appUser && menuItems.map((item) => {
+             if (item.requiredArtist && !appUser.isArtist) {
+                return null;
+              }
+              return (
               <SidebarMenuItem key={item.label}>
               <Link href={item.href}>
                   <SidebarMenuButton
@@ -80,7 +84,8 @@ export function MainSidebarNav() {
                   </SidebarMenuButton>
               </Link>
               </SidebarMenuItem>
-          ))}
+              )
+            })}
           {appUser && (
             <SidebarMenuItem>
               <SettingsDialog>

@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { updateUserProfile } from "@/lib/data";
+
 
 const artistFormSchema = z.object({
   artistName: z
@@ -33,6 +36,7 @@ const artistFormSchema = z.object({
 type ArtistFormValues = z.infer<typeof artistFormSchema>;
 
 export default function SettingsArtistPage() {
+    const { appUser, refreshAppUser } = useAuth();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,19 +51,38 @@ export default function SettingsArtistPage() {
     });
 
     async function onSubmit(data: ArtistFormValues) {
+        if (!appUser) return;
         setIsSubmitting(true);
-        console.log("Submitting artist application:", data);
-
-        // Simulate API call
+        
+        // Simulate API call for review
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        toast({
-            title: "Application Submitted!",
-            description: "Your artist application has been received and is under review.",
-        });
-        
-        form.reset();
-        setIsSubmitting(false);
+        try {
+             await updateUserProfile(appUser.id, { isArtist: true });
+             await refreshAppUser();
+             toast({
+                title: "Congratulations!",
+                description: "Your artist application has been approved. You now have access to the Creator Studio.",
+            });
+            form.reset();
+        } catch (error) {
+             toast({
+                title: "Application failed",
+                description: "Could not process your artist application.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    if (appUser?.isArtist) {
+        return (
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Artist Account</h3>
+                <p>Congratulations! You are already an approved artist. You can manage your music in the Creator Studio.</p>
+            </div>
+        )
     }
 
     return (
