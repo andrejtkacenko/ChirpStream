@@ -28,6 +28,10 @@ const sidebarNavItems = [
     title: "Display",
     href: "/settings/display",
   },
+  {
+    title: "Artist Account",
+    href: "/settings/artist",
+  },
 ];
 
 interface SettingsLayoutProps {
