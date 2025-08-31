@@ -58,7 +58,7 @@ export default function SettingsArtistPage() {
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         try {
-             await updateUserProfile(appUser.id, { isArtist: true });
+             await updateUserProfile(appUser.id, { isArtist: true, hasSeenStudioNotification: false });
              await refreshAppUser();
              toast({
                 title: "Congratulations!",

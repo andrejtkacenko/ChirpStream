@@ -20,11 +20,14 @@ import { useAuth } from '@/context/auth-context'
 import type { User as FirebaseUser } from 'firebase/auth'
 import { cn } from '@/lib/utils'
 import { SettingsDialog } from '../settings/settings-dialog'
+import { markStudioNotificationAsSeen } from '@/lib/data'
+import { useToast } from '@/hooks/use-toast'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
-  const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers } = useAuth();
+  const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers, refreshAppUser } = useAuth();
+  const { toast } = useToast();
   
   const menuItems = appUser ? [
     { href: '/', label: 'Home', icon: Home, requiredPlan: 'any' },
@@ -33,7 +36,7 @@ export function MainSidebarNav() {
     { href: '/messages', label: 'Messages', icon: Mail, requiredPlan: 'any' },
     { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark, requiredPlan: 'any' },
     { href: '/music', label: 'Music', icon: Music, requiredPlan: 'any' },
-    { href: '/studio', label: 'Studio', icon: Music4, requiredArtist: true },
+    { href: '/studio', label: 'Studio', icon: Music4, requiredArtist: true, id: 'studio' },
     { href: '/premium', label: 'Premium', icon: Gem, requiredPlan: 'any' },
     { href: `/${appUser.username}`, label: 'Profile', icon: User, requiredPlan: 'any' },
   ] : [];
@@ -48,6 +51,17 @@ export function MainSidebarNav() {
   
   const handleSwitchUser = (user: FirebaseUser) => {
     switchUser(user);
+  }
+
+  const handleStudioClick = async () => {
+    if (appUser && appUser.isArtist && !appUser.hasSeenStudioNotification) {
+      try {
+        await markStudioNotificationAsSeen(appUser.id);
+        await refreshAppUser();
+      } catch (error) {
+        toast({ title: "Error", description: "Could not update notification status." });
+      }
+    }
   }
 
   const isActive = (href: string) => {
@@ -69,15 +83,17 @@ export function MainSidebarNav() {
              if (item.requiredArtist && !appUser.isArtist) {
                 return null;
               }
+              const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
+
               return (
               <SidebarMenuItem key={item.label}>
-              <Link href={item.href}>
+              <Link href={item.href} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
                   <SidebarMenuButton
                   size="lg"
                   isActive={isActive(item.href)}
                   tooltip={{children: item.label}}
                   asChild={false}
-                  className={cn("font-semibold justify-center xl:justify-start")}
+                  className={cn("font-semibold justify-center xl:justify-start", showGlow && "animate-glow")}
                   >
                   <item.icon className="h-6 w-6" />
                   <span className="text-lg hidden xl:flex">{item.label}</span>

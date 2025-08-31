@@ -105,3 +105,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 2px theme('colors.primary.DEFAULT'), 0 0 5px theme('colors.primary.DEFAULT'), 0 0 10px theme('colors.primary.DEFAULT');
+    }
+    50% {
+      box-shadow: 0 0 5px theme('colors.primary.DEFAULT'), 0 0 15px theme('colors.primary.DEFAULT'), 0 0 25px theme('colors.primary.DEFAULT');
+    }
+  }
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+}

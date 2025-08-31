@@ -12,6 +12,7 @@ export interface User {
   plan: 'free' | 'premium' | 'premium_plus';
   bookmarks: string[];
   isArtist?: boolean;
+  hasSeenStudioNotification?: boolean;
 }
 
 export interface Post {
