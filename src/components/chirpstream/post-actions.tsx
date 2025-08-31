@@ -104,6 +104,17 @@ export function PostActions({ post }: { post: Post }) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const shareUrl = `${window.location.origin}/${post.author.username}/status/${post.id}`;
+    
+    const copyToClipboard = async () => {
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            toast({ title: "Link copied to clipboard!" });
+        } catch (copyError) {
+            console.error("Failed to copy to clipboard:", copyError);
+            toast({ title: "Could not copy link.", variant: "destructive" });
+        }
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -111,14 +122,16 @@ export function PostActions({ post }: { post: Post }) {
           text: post.content,
           url: shareUrl,
         });
-      } catch (error) {
-        console.error("Error sharing:", error);
-        toast({ title: "Could not share post.", variant: "destructive" });
+      } catch (error: any) {
+        // If sharing fails (e.g. permission denied, or aborted by user)
+        // fall back to copying the link to the clipboard.
+        if (error.name !== 'AbortError') {
+             console.error("Error sharing:", error);
+             await copyToClipboard();
+        }
       }
     } else {
-        // Fallback for browsers that don't support Web Share API
-        await navigator.clipboard.writeText(shareUrl);
-        toast({ title: "Link copied to clipboard!" });
+        await copyToClipboard();
     }
   };
 
