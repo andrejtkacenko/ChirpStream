@@ -107,10 +107,6 @@ function MusicPageContent() {
             </div>
             
             <div className="p-4 space-y-4 border-b">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Search Music" className="pl-10" />
-                </div>
                 <nav className="flex flex-row space-x-1">
                     <Button variant="ghost" className="font-semibold text-base">
                         <Home className="mr-2 h-5 w-5" />
@@ -133,6 +129,10 @@ function MusicPageContent() {
                         Обновления
                     </Button>
                 </nav>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input placeholder="Search Music" className="pl-10" />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
