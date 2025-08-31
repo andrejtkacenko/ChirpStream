@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, SkipBack, SkipForward, Home, Music as MusicIcon, Compass, Radio, Bell, Search } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 const musicTracks = [
   {
@@ -145,7 +146,9 @@ function MusicPageContent() {
                         </CardHeader>
                         <CardContent className="p-4">
                             <p className="font-bold truncate">{track.title}</p>
-                            <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+                            <Link href={`/artist/${encodeURIComponent(track.artist)}`} onClick={(e) => e.stopPropagation()}>
+                                <p className="text-sm text-muted-foreground truncate hover:underline">{track.artist}</p>
+                            </Link>
                         </CardContent>
                     </Card>
                 ))}
