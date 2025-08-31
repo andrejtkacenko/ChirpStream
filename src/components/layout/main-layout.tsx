@@ -34,6 +34,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
   
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
   const showAppShell = !loading && user && isEmailVerified && !isAuthPage;
+  const isHomePage = pathname === '/';
 
   if (!showAppShell) {
       return <AppBody>{children}</AppBody>;
@@ -50,12 +51,14 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <MainSidebarNav />
                   </Sidebar>
               </aside>
-              <div className={cn("flex-1 border-x min-w-0", pathname.startsWith('/messages') ? "max-w-[1050px]" : "max-w-[700px]")}>
+              <div className={cn("flex-1 border-x min-w-0", (pathname.startsWith('/messages') || !isHomePage) ? "max-w-[1050px]" : "max-w-[700px]")}>
                   {children}
               </div>
-              <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                <RightSidebar />
-              </aside>
+              {isHomePage && (
+                <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+                  <RightSidebar />
+                </aside>
+              )}
           </div>
         </div>
       </SidebarProvider>
