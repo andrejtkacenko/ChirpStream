@@ -2,10 +2,11 @@
 "use client";
 
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { User } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -77,43 +78,45 @@ export function UserProfileHoverCard({ children, user }: { children: React.React
 
 
   return (
-    <Popover>
-      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-        {children}
-      </PopoverTrigger>
-      <PopoverContent className="w-80" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-                 <Link href={`/${user.username}`}>
-                    <Avatar className="h-16 w-16">
-                        <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                 </Link>
-                {renderActionButtons()}
+    <TooltipProvider>
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild onClick={(e) => e.stopPropagation()}>
+            {children}
+        </TooltipTrigger>
+        <TooltipContent className="w-80 p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-start">
+                    <Link href={`/${user.username}`}>
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                    </Link>
+                    {renderActionButtons()}
+                </div>
+                <div>
+                    <Link href={`/${user.username}`} className="hover:underline">
+                        <div className="flex items-center gap-1">
+                            <h3 className="text-lg font-bold">{user.name}</h3>
+                            {(user.plan === 'premium' || user.plan === 'premium_plus') && (
+                                <Crown className="h-4 w-4 text-primary" />
+                            )}
+                        </div>
+                        <p className="text-muted-foreground">@{user.username}</p>
+                    </Link>
+                    <p className="mt-2 text-sm">{user.bio}</p>
+                </div>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                    <span>
+                        <span className="font-bold text-foreground">{user.following.length}</span> Following
+                    </span>
+                    <span>
+                        <span className="font-bold text-foreground">{user.followers.length}</span> Followers
+                    </span>
+                </div>
             </div>
-            <div>
-                <Link href={`/${user.username}`} className="hover:underline">
-                    <div className="flex items-center gap-1">
-                        <h3 className="text-lg font-bold">{user.name}</h3>
-                         {(user.plan === 'premium' || user.plan === 'premium_plus') && (
-                            <Crown className="h-4 w-4 text-primary" />
-                        )}
-                    </div>
-                    <p className="text-muted-foreground">@{user.username}</p>
-                </Link>
-                <p className="mt-2 text-sm">{user.bio}</p>
-            </div>
-            <div className="flex gap-4 text-sm text-muted-foreground">
-                <span>
-                    <span className="font-bold text-foreground">{user.following.length}</span> Following
-                </span>
-                <span>
-                    <span className="font-bold text-foreground">{user.followers.length}</span> Followers
-                </span>
-            </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
