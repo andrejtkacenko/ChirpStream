@@ -48,12 +48,12 @@ export function MainLayout({ children }: { children: ReactNode }) {
                 </Sidebar>
               )}
               <div className="flex-1 flex justify-center">
-                  <div className="w-full max-w-[600px] border-x">
+                  <div className="w-full max-w-[900px] border-x">
                     {children}
                   </div>
               </div>
               {showSidebar && (
-                <aside className="hidden lg:block w-[300px] pt-6 pl-6 border-l">
+                <aside className="hidden lg:block w-[350px] pt-6 pl-6 border-l">
                   <RightSidebar />
                 </aside>
               )}
