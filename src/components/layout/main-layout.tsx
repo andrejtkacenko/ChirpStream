@@ -50,14 +50,12 @@ export function MainLayout({ children }: { children: ReactNode }) {
                     <MainSidebarNav />
                   </Sidebar>
               </aside>
-              <div className={cn("flex-1 border-x", pathname === '/' ? "max-w-[700px]" : "max-w-[1050px]")}>
+              <div className={cn("flex-1 border-x min-w-0", pathname.startsWith('/messages') ? "max-w-[1050px]" : "max-w-[700px]")}>
                   {children}
               </div>
-              {pathname === '/' && (
-                <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                  <RightSidebar />
-                </aside>
-              )}
+              <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+                <RightSidebar />
+              </aside>
           </div>
         </div>
       </SidebarProvider>

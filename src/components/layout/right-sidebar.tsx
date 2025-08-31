@@ -2,6 +2,8 @@
 import { WhoToFollow } from "../chirpstream/who-to-follow";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
+import { Input } from "../ui/input";
+import { Search } from "lucide-react";
 
 const newsItems = [
     { topic: "Space", title: "NASA discovers new planet in nearby galaxy", posts: "12.3k posts" },

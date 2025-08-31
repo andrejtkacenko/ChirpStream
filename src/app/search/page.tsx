@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PostCard } from "@/components/chirpstream/post-card";
 import { Button } from "@/components/ui/button";
@@ -179,10 +179,18 @@ function SearchPageContent() {
   );
 }
 
+function SearchPageWrapper() {
+  return (
+    <ProtectedRoute>
+        <SearchPageContent />
+    </ProtectedRoute>
+  )
+}
+
 export default function SearchPage() {
     return (
-        <ProtectedRoute>
-            <SearchPageContent />
-        </ProtectedRoute>
+        <Suspense fallback={<SearchSkeleton />}>
+            <SearchPageWrapper />
+        </Suspense>
     )
 }

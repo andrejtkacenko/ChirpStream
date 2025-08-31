@@ -3,6 +3,7 @@
 
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -344,7 +345,7 @@ export async function unfollowUser(currentUserId: string, targetUserId: string) 
     const targetUserRef = doc(db, 'users', targetUserId);
 
     batch.update(currentUserRef, { following: arrayRemove(targetUserId) });
-    batch.update(targetUserRef, { followers: arrayRemove(currentUserId) });
+    batch.update(targetUserRef, { followers: arrayRemove(targetUserId) });
     
     await batch.commit();
 
@@ -388,13 +389,23 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
 
 export async function getConversationsForUser(userId: string): Promise<Conversation[]> {
     const convRef = collection(db, 'conversations');
-    const q = query(convRef, where('participants', 'array-contains', userId), orderBy('lastMessage.timestamp', 'desc'));
+    const q = query(convRef, where('participants', 'array-contains', userId));
     
     const querySnapshot = await getDocs(q);
     const conversations = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
     } as Conversation));
+
+    // Client-side sort
+    conversations.sort((a, b) => {
+        const timeA = a.lastMessage?.timestamp;
+        const timeB = b.lastMessage?.timestamp;
+        if (!timeA || !timeB) return 0;
+        const dateA = timeA instanceof Timestamp ? timeA.toMillis() : new Date(timeA as any).getTime();
+        const dateB = timeB instanceof Timestamp ? timeB.toMillis() : new Date(timeB as any).getTime();
+        return dateB - dateA;
+    });
 
     for (const conv of conversations) {
         conv.participantDetails = await getUsersByIds(conv.participants);
