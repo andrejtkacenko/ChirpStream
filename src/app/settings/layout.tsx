@@ -1,9 +1,11 @@
 
+
 "use client";
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { SidebarNav } from "@/components/settings/sidebar-nav";
 import { Separator } from "@/components/ui/separator";
+import ProtectedRoute from "@/components/auth/protected-route";
 
 const sidebarNavItems = [
   {
@@ -32,9 +34,9 @@ interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export default function SettingsLayout({ children }: SettingsLayoutProps) {
+function SettingsLayoutContent({ children }: SettingsLayoutProps) {
   return (
-    <MainLayout>
+    <>
         <div className="p-4 md:p-6">
             <div className="space-y-0.5">
                 <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
@@ -50,6 +52,15 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                 <div className="flex-1 lg:max-w-2xl">{children}</div>
             </div>
         </div>
-    </MainLayout>
+    </>
   );
+}
+
+
+export default function SettingsLayout({ children }: SettingsLayoutProps) {
+    return (
+        <ProtectedRoute>
+            <SettingsLayoutContent>{children}</SettingsLayoutContent>
+        </ProtectedRoute>
+    )
 }

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,10 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
 import { updateUserProfile } from "@/lib/data";
 import { Skeleton } from "@/components/ui/skeleton";
-import ProtectedRoute from "@/components/auth/protected-route";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
   username: z
@@ -61,15 +62,7 @@ function ProfilePageContent() {
   async function onSubmit(data: ProfileFormValues) {
     if (!appUser) return;
     setIsSubmitting(true);
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
-
+    
     try {
         await updateUserProfile(appUser.id, data);
         await refreshAppUser();
@@ -77,6 +70,7 @@ function ProfilePageContent() {
             title: "Profile updated",
             description: "Your profile information has been successfully updated.",
         });
+        form.reset(data); // Reset form with new values to clear dirty state
     } catch(e: any) {
         toast({
             title: "Update failed",
@@ -94,6 +88,13 @@ function ProfilePageContent() {
   
   return (
     <div className="space-y-6">
+        <div>
+            <h3 className="text-lg font-medium">Profile</h3>
+            <p className="text-sm text-muted-foreground">
+                This is how others will see you on the site.
+            </p>
+        </div>
+        <Separator />
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
@@ -185,6 +186,13 @@ function ProfilePageContent() {
 function ProfileFormSkeleton() {
     return (
         <div className="space-y-6">
+             <div>
+                <h3 className="text-lg font-medium">Profile</h3>
+                <p className="text-sm text-muted-foreground">
+                    This is how others will see you on the site.
+                </p>
+            </div>
+            <Separator />
             <div className="space-y-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-10 w-full" />
@@ -207,9 +215,6 @@ function ProfileFormSkeleton() {
 
 export default function SettingsProfilePage() {
     return (
-        <ProtectedRoute>
-            <ProfilePageContent />
-        </ProtectedRoute>
+        <ProfilePageContent />
     )
 }
-
