@@ -73,8 +73,7 @@ export function MainSidebarNav() {
     <>
       <SidebarHeader className='p-4'>
         <div className={cn("flex", sidebarState === 'expanded' ? "justify-between" : "justify-center")}>
-          {sidebarState === 'expanded' ? renderBrand() : <SidebarTrigger className='md:hidden' />}
-           <SidebarTrigger className={cn(sidebarState === 'expanded' ? 'block' : 'hidden md:block')} />
+          {renderBrand()}
         </div>
       </SidebarHeader>
       <SidebarContent className="p-4 flex-grow">
