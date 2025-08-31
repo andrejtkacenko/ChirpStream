@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
 import { Container } from '../ui/container'
+import { LeftSidebar } from './left-sidebar'
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
@@ -41,11 +42,18 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <SidebarProvider>
         <Container>
           <div className="flex min-h-screen">
-              {showSidebar && <Sidebar>
-                <MainSidebarNav />
-              </Sidebar>}
-              <div className="flex-1 flex">
-                  <div className="w-full max-w-[600px]">
+              {showSidebar && (
+                <>
+                  <Sidebar>
+                    <MainSidebarNav />
+                  </Sidebar>
+                  <aside className="hidden lg:block w-[300px] pt-6 pr-6 border-r">
+                    <LeftSidebar />
+                  </aside>
+                </>
+              )}
+              <div className="flex-1 flex justify-center">
+                  <div className="w-full max-w-[600px] border-x">
                     {children}
                   </div>
               </div>
@@ -55,4 +63,3 @@ export function MainLayout({ children }: { children: ReactNode }) {
     </AppBody>
   )
 }
-

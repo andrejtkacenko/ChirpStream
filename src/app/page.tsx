@@ -3,7 +3,6 @@
 
 import { CreatePostForm } from "@/components/chirpstream/create-post-form";
 import { PostCard } from "@/components/chirpstream/post-card";
-import { RightSidebar } from "@/components/layout/right-sidebar";
 import { getPostsForFeed } from "@/lib/data";
 import type { PostWithAuthor } from "@/lib/types";
 import ProtectedRoute from "@/components/auth/protected-route";
@@ -53,31 +52,26 @@ function HomePageContent() {
 
 
   return (
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_350px]">
-        <main className="border-x max-w-[600px] w-full">
-          <div className="p-4 border-b flex items-center gap-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-             <SidebarTrigger className="md:hidden" />
-            <h1 className="text-xl font-bold">Home</h1>
+      <main>
+        <div className="p-4 border-b flex items-center gap-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+            <SidebarTrigger className="md:hidden" />
+          <h1 className="text-xl font-bold">Home</h1>
+        </div>
+        <CreatePostForm onPostCreated={loadFeed} />
+        {feedLoading ? <FeedSkeleton /> : (
+          <div className="flex flex-col">
+            {feedPosts.length > 0 ? (
+              feedPosts.map((post) => (
+                  <PostCard key={post.id} post={post} author={post.author} />
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center p-8">
+                Your feed is empty. Follow some people to see their posts!
+              </p>
+            )}
           </div>
-          <CreatePostForm onPostCreated={loadFeed} />
-          {feedLoading ? <FeedSkeleton /> : (
-            <div className="flex flex-col">
-              {feedPosts.length > 0 ? (
-                feedPosts.map((post) => (
-                    <PostCard key={post.id} post={post} author={post.author} />
-                ))
-              ) : (
-                <p className="text-muted-foreground text-center p-8">
-                  Your feed is empty. Follow some people to see their posts!
-                </p>
-              )}
-            </div>
-          )}
-        </main>
-        <aside className="hidden xl:block pt-6 pl-6">
-          <RightSidebar />
-        </aside>
-      </div>
+        )}
+      </main>
   );
 }
 
