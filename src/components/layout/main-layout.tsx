@@ -1,14 +1,13 @@
 
 "use client"
 
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar } from '@/components/ui/sidebar'
 import { MainSidebarNav } from './main-sidebar-nav'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/auth-context'
 import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
-import { Container } from '../ui/container'
 import { RightSidebar } from './right-sidebar'
 
 function AppBody({ children }: { children: React.ReactNode }) {
@@ -20,7 +19,6 @@ function AppBody({ children }: { children: React.ReactNode }) {
         themeClass = 'premium-plus';
     }
 
-
     return (
         <div className={cn("h-full", themeClass)}>
             {children}
@@ -28,7 +26,6 @@ function AppBody({ children }: { children: React.ReactNode }) {
         </div>
     )
 }
-
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const { user, loading, isEmailVerified } = useAuth();
