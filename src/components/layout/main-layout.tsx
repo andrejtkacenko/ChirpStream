@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
 import { RightSidebar } from './right-sidebar'
+import { MainHeader } from './main-header'
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
@@ -40,8 +41,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
+      <MainHeader />
       <SidebarProvider>
-        <div className="mx-auto w-full max-w-screen-xl">
+        <div className="mx-auto max-w-screen-xl">
           <div className="flex justify-center">
               <aside className="w-auto xl:w-[275px] shrink-0">
                   <Sidebar className="sticky top-0 h-screen">
