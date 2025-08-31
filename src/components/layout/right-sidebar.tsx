@@ -1,4 +1,7 @@
 
+"use client";
+
+import { usePathname } from 'next/navigation'
 import { WhoToFollow } from "../chirpstream/who-to-follow";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Separator } from "../ui/separator";
@@ -12,6 +15,13 @@ const newsItems = [
 ]
 
 export function RightSidebar() {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
+  if (!isHomePage) {
+    return null;
+  }
+
   return (
     <div className="sticky top-6 flex flex-col gap-6">
       <Card className="bg-secondary/50 border-none">

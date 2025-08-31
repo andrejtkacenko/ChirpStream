@@ -34,7 +34,6 @@ export function MainLayout({ children }: { children: ReactNode }) {
   
   const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/verify-email';
   const showAppShell = !loading && user && isEmailVerified && !isAuthPage;
-  const isHomePage = pathname === '/';
 
   if (!showAppShell) {
       return <AppBody>{children}</AppBody>;
@@ -55,7 +54,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
                   {children}
               </div>
               <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                {isHomePage && <RightSidebar />}
+                <RightSidebar />
               </aside>
           </div>
         </div>
