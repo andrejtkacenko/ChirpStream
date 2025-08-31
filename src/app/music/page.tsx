@@ -111,24 +111,24 @@ function MusicPageContent() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input placeholder="Search Music" className="pl-10" />
                 </div>
-                <nav className="flex flex-col space-y-1">
-                    <Button variant="ghost" className="justify-start font-semibold text-base">
+                <nav className="flex flex-row space-x-1">
+                    <Button variant="ghost" className="font-semibold text-base">
                         <Home className="mr-2 h-5 w-5" />
                         Главная
                     </Button>
-                    <Button variant="ghost" className="justify-start text-base">
+                    <Button variant="ghost" className="text-base">
                         <MusicIcon className="mr-2 h-5 w-5" />
                         Моя музыка
                     </Button>
-                    <Button variant="ghost" className="justify-start text-base">
+                    <Button variant="ghost" className="text-base">
                         <Compass className="mr-2 h-5 w-5" />
                         Обзор
                     </Button>
-                    <Button variant="ghost" className="justify-start text-base">
+                    <Button variant="ghost" className="text-base">
                         <Radio className="mr-2 h-5 w-5" />
                         Радио
                     </Button>
-                    <Button variant="ghost" className="justify-start text-base">
+                    <Button variant="ghost" className="text-base">
                          <Bell className="mr-2 h-5 w-5" />
                         Обновления
                     </Button>
