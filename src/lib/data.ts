@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
@@ -644,7 +634,19 @@ export async function getTracks(count: number = 50): Promise<Track[]> {
 
 export async function getTracksByArtist(artistId: string): Promise<Track[]> {
     const tracksCol = collection(db, 'tracks');
-    const q = query(tracksCol, where('artistId', '==', artistId), orderBy('createdAt', 'desc'));
+    const q = query(tracksCol, where('artistId', '==', artistId));
     const tracksSnapshot = await getDocs(q);
-    return tracksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Track));
+    const tracks = tracksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Track));
+    
+    // Sort on the client side
+    tracks.sort((a, b) => {
+        const timeA = a.createdAt;
+        const timeB = b.createdAt;
+        if (!timeA || !timeB) return 0;
+        const dateA = timeA instanceof Timestamp ? timeA.toMillis() : new Date(timeA as any).getTime();
+        const dateB = timeB instanceof Timestamp ? timeB.toMillis() : new Date(timeB as any).getTime();
+        return dateB - dateA;
+    });
+
+    return tracks;
 }
