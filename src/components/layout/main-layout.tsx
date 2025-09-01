@@ -46,7 +46,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
               <MainSidebarNav />
           </header>
           <div className="ml-20 lg:ml-64 flex-grow flex w-full">
-              <main className="flex-1 max-w-2xl border-x">
+              <main className="flex-1 max-w-xl border-x">
                   <MainHeader />
                   {children}
               </main>
