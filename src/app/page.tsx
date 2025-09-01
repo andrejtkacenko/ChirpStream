@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function FeedSkeleton() {
   return (
@@ -74,7 +74,9 @@ function HomePageContent() {
 export default function Home() {
   return (
     <ProtectedRoute>
-      <HomePageContent />
+      <MainLayout>
+        <HomePageContent />
+      </MainLayout>
     </ProtectedRoute>
   )
 }

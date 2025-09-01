@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function NotificationSkeleton() {
     return (
@@ -122,7 +123,9 @@ function NotificationsPageContent() {
 export default function NotificationsPage() {
     return (
         <ProtectedRoute>
-            <NotificationsPageContent />
+            <MainLayout>
+                <NotificationsPageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }

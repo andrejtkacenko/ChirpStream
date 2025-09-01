@@ -18,6 +18,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { MainLayout } from "@/components/layout/main-layout";
 
 function FeedSkeleton() {
   return (
@@ -126,7 +127,9 @@ function ExplorePageContent() {
 export default function ExplorePage() {
     return (
         <ProtectedRoute>
-            <ExplorePageContent />
+            <MainLayout>
+                <ExplorePageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }

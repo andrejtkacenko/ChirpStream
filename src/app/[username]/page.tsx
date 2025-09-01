@@ -11,6 +11,7 @@ import type { PostWithAuthor, User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function ProfilePageSkeleton() {
   return (
@@ -105,7 +106,9 @@ function ProfilePageContent() {
 export default function ProfilePage() {
     return (
         <ProtectedRoute>
-            <ProfilePageContent />
+            <MainLayout>
+                <ProfilePageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }

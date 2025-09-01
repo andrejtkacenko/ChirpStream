@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function ConversationSkeleton() {
     return (
@@ -105,7 +106,9 @@ function MessagesPageContent() {
 export default function MessagesPage() {
     return (
         <ProtectedRoute>
-            <MessagesPageContent />
+            <MainLayout>
+                <MessagesPageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }

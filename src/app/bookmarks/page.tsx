@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/auth/protected-route";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PostCard } from "@/components/chirpstream/post-card";
 import { Bookmark } from "lucide-react";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function BookmarksSkeleton() {
   return (
@@ -76,7 +77,9 @@ function BookmarksPageContent() {
 export default function BookmarksPage() {
     return (
         <ProtectedRoute>
-            <BookmarksPageContent />
+            <MainLayout>
+                <BookmarksPageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }

@@ -42,21 +42,16 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-         <div className="flex">
+         <div className="flex justify-center">
             <Sidebar>
               <MainSidebarNav />
             </Sidebar>
-            <main className="flex-1">
-              <MainHeader />
-              <div className="flex justify-center">
-                  <div className="w-full max-w-[700px] border-x min-w-0">
-                      {children}
-                  </div>
-                  <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                    <RightSidebar />
-                  </aside>
-              </div>
+            <main className="flex-1 max-w-[600px] border-x">
+              {children}
             </main>
+            <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+              <RightSidebar />
+            </aside>
         </div>
       </SidebarProvider>
     </AppBody>

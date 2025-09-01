@@ -5,7 +5,6 @@ import { useAuth } from '@/context/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
 import { Skeleton } from '../ui/skeleton';
-import { MainLayout } from '../layout/main-layout';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -13,7 +12,6 @@ interface ProtectedRouteProps {
 
 function AuthLoader() {
     return (
-      <MainLayout>
         <div className="flex items-center justify-center min-h-screen">
              <div className="w-full max-w-md p-8 space-y-4">
                 <Skeleton className="h-10 w-full" />
@@ -21,7 +19,6 @@ function AuthLoader() {
                 <Skeleton className="h-10 w-full" />
             </div>
         </div>
-      </MainLayout>
     )
 }
 
@@ -54,5 +51,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <AuthLoader />;
   }
 
-  return <MainLayout>{children}</MainLayout>;
+  return <>{children}</>;
 }
