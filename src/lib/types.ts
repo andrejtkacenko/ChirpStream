@@ -13,6 +13,12 @@ export interface User {
   bookmarks: string[];
   isArtist?: boolean;
   hasSeenStudioNotification?: boolean;
+  notificationSettings?: {
+    newFollowers?: boolean;
+    postLikes?: boolean;
+    postReplies?: boolean;
+    directMessages?: boolean;
+  }
 }
 
 export interface Post {

@@ -6,6 +6,7 @@
 
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -91,14 +92,7 @@ export async function updateUserPlan(userId: string, plan: 'free' | 'premium' | 
 
 export async function updateUserProfile(
     userId: string, 
-    data: { 
-        name?: string; 
-        username?: string; 
-        bio?: string; 
-        avatar?: string; 
-        isArtist?: boolean; 
-        hasSeenStudioNotification?: boolean 
-    }
+    data: Partial<Pick<User, 'name' | 'username' | 'bio' | 'avatar' | 'isArtist' | 'hasSeenStudioNotification' | 'notificationSettings'>>
 ): Promise<void> {
     // Check for username uniqueness if it's being changed
     if (data.username) {

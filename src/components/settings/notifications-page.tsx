@@ -11,8 +11,70 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/context/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { updateUserProfile } from "@/lib/data";
+import type { User } from "@/lib/types";
+import { useState, useEffect } from "react";
+
+
+type NotificationSettings = NonNullable<User['notificationSettings']>;
+
+const defaultSettings: NotificationSettings = {
+    newFollowers: true,
+    postLikes: true,
+    postReplies: false,
+    directMessages: true,
+};
 
 export default function SettingsNotificationsPage() {
+    const { appUser, refreshAppUser, loading } = useAuth();
+    const { toast } = useToast();
+    const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
+    const [isSaving, setIsSaving] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+
+    useEffect(() => {
+        if (appUser?.notificationSettings) {
+            setSettings({ ...defaultSettings, ...appUser.notificationSettings });
+        }
+    }, [appUser]);
+
+    const handleSettingChange = (key: keyof NotificationSettings, value: boolean) => {
+        setSettings(prev => ({ ...prev, [key]: value }));
+        setHasChanges(true);
+    };
+
+    const handleSaveChanges = async () => {
+        if (!appUser) return;
+        setIsSaving(true);
+        try {
+            await updateUserProfile(appUser.id, { notificationSettings: settings });
+            await refreshAppUser();
+            toast({
+                title: "Settings saved",
+                description: "Your notification preferences have been updated.",
+            });
+            setHasChanges(false);
+        } catch (error) {
+            toast({
+                title: "Error saving settings",
+                description: "Could not update your preferences. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+
+    const notificationItems: { id: keyof NotificationSettings; label: string; description: string }[] = [
+        { id: "newFollowers", label: "New followers", description: "When someone starts following you." },
+        { id: "postLikes", label: "Post likes", description: "When someone likes one of your posts." },
+        { id: "postReplies", label: "Replies", description: "When someone replies to your post or thread." },
+        { id: "directMessages", label: "Direct messages", description: "When you receive a new direct message." },
+    ]
+
     return (
         <div className="space-y-6">
             <div>
@@ -30,49 +92,28 @@ export default function SettingsNotificationsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between space-x-4">
-                        <Label htmlFor="new-followers" className="flex flex-col space-y-1">
-                            <span>New followers</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
-                                When someone starts following you.
-                            </span>
-                        </Label>
-                        <Switch id="new-followers" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between space-x-4">
-                        <Label htmlFor="post-likes" className="flex flex-col space-y-1">
-                            <span>Post likes</span>
-                             <span className="font-normal leading-snug text-muted-foreground">
-                                When someone likes one of your posts.
-                            </span>
-                        </Label>
-                        <Switch id="post-likes" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between space-x-4">
-                        <Label htmlFor="post-replies" className="flex flex-col space-y-1">
-                            <span>Replies</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
-                                When someone replies to your post or thread.
-                            </span>
-                        </Label>
-                        <Switch id="post-replies" />
-                    </div>
-                    <div className="flex items-center justify-between space-x-4">
-                        <Label htmlFor="direct-messages" className="flex flex-col space-y-1">
-                            <span>Direct messages</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
-                                When you receive a new direct message.
-                            </span>
-                        </Label>
-                        <Switch id="direct-messages" defaultChecked />
-                    </div>
+                    {notificationItems.map(item => (
+                        <div key={item.id} className="flex items-center justify-between space-x-4">
+                            <Label htmlFor={item.id} className="flex flex-col space-y-1">
+                                <span>{item.label}</span>
+                                <span className="font-normal leading-snug text-muted-foreground">
+                                    {item.description}
+                                </span>
+                            </Label>
+                            <Switch 
+                                id={item.id} 
+                                checked={settings[item.id]}
+                                onCheckedChange={(checked) => handleSettingChange(item.id, checked)}
+                                disabled={loading}
+                             />
+                        </div>
+                    ))}
                 </CardContent>
             </Card>
 
-             <Button disabled>Save preferences</Button>
-             <p className="text-sm text-muted-foreground">
-                Saving preferences is not yet implemented.
-             </p>
+             <Button onClick={handleSaveChanges} disabled={isSaving || !hasChanges}>
+                {isSaving ? "Saving..." : "Save preferences"}
+            </Button>
         </div>
     )
 }
