@@ -13,11 +13,11 @@ export interface User {
   bookmarks: string[];
   isArtist: boolean;
   hasSeenStudioNotification: boolean;
-  notificationSettings?: {
-    newFollowers?: boolean;
-    postLikes?: boolean;
-    postReplies?: boolean;
-    directMessages?: boolean;
+  notificationSettings: {
+    newFollowers: boolean;
+    postLikes: boolean;
+    postReplies: boolean;
+    directMessages: boolean;
   }
 }
 
@@ -73,4 +73,14 @@ export interface Notification {
   // Hydrated fields
   actor?: User;
   post?: PostWithAuthor;
+}
+
+export interface Track {
+  id: string;
+  title: string;
+  artist: string; // Artist's display name
+  artistId: string; // Artist's user ID
+  artistUsername: string; // Artist's username for linking
+  cover: string; // URL to cover art
+  createdAt: Timestamp | { seconds: number, nanoseconds: number } | string;
 }

@@ -7,9 +7,10 @@
 
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
-import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
+import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
 
 // --- User Functions ---
 
@@ -613,4 +614,37 @@ export async function markNotificationsAsRead(userId: string): Promise<void> {
     });
 
     await batch.commit();
+}
+
+
+// --- Music / Track Functions ---
+
+export async function addTrack({ artistId, artistName, artistUsername, trackName }: { artistId: string, artistName: string, artistUsername: string, trackName: string }): Promise<string> {
+    const tracksCol = collection(db, 'tracks');
+    
+    const newTrack: Omit<Track, 'id'> = {
+        artistId,
+        artist: artistName,
+        artistUsername,
+        title: trackName,
+        cover: `https://picsum.photos/seed/${trackName.replace(/\s+/g, '')}/400/400`, // Use track name for a unique-ish seed
+        createdAt: serverTimestamp(),
+    };
+
+    const docRef = await addDoc(tracksCol, newTrack);
+    return docRef.id;
+}
+
+export async function getTracks(count: number = 50): Promise<Track[]> {
+    const tracksCol = collection(db, 'tracks');
+    const q = query(tracksCol, orderBy('createdAt', 'desc'), limit(count));
+    const tracksSnapshot = await getDocs(q);
+    return tracksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Track));
+}
+
+export async function getTracksByArtist(artistId: string): Promise<Track[]> {
+    const tracksCol = collection(db, 'tracks');
+    const q = query(tracksCol, where('artistId', '==', artistId), orderBy('createdAt', 'desc'));
+    const tracksSnapshot = await getDocs(q);
+    return tracksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Track));
 }

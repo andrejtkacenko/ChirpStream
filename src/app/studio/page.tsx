@@ -7,22 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, Music4 } from "lucide-react";
+import { UploadCloud } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { addTrack } from "@/lib/data";
 
 function StudioPageContent() {
     const { toast } = useToast();
+    const { appUser } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
     const [trackName, setTrackName] = useState("");
-    const [coverArtName, setCoverArtName] = useState("");
-    const [audioFileName, setAudioFileName] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!trackName || !coverArtName || !audioFileName) {
+        if (!appUser || !appUser.isArtist) {
             toast({
-                title: "Missing fields",
-                description: "Please fill out all fields before uploading.",
+                title: "Unauthorized",
+                description: "You must be an artist to upload tracks.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (!trackName) {
+            toast({
+                title: "Missing track name",
+                description: "Please provide a name for your track.",
                 variant: "destructive"
             });
             return;
@@ -34,18 +44,30 @@ function StudioPageContent() {
             description: `"${trackName}" is being uploaded.`,
         });
 
-        // Simulate upload
-        setTimeout(() => {
+        try {
+            await addTrack({
+                artistId: appUser.id,
+                artistName: appUser.name,
+                artistUsername: appUser.username,
+                trackName: trackName,
+            });
+            
             setIsUploading(false);
             toast({
                 title: "Upload successful!",
                 description: `"${trackName}" is now live.`,
             });
-            // Reset form
             setTrackName("");
-            setCoverArtName("");
-            setAudioFileName("");
-        }, 2000);
+
+        } catch (error) {
+            setIsUploading(false);
+            toast({
+                title: "Upload failed",
+                description: "Could not upload your track. Please try again.",
+                variant: "destructive"
+            });
+            console.error("Upload error:", error);
+        }
     };
 
     return (
@@ -70,26 +92,6 @@ function StudioPageContent() {
                                 onChange={(e) => setTrackName(e.target.value)}
                                 disabled={isUploading}
                             />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cover-art">Cover Art</Label>
-                            <Input 
-                                id="cover-art" 
-                                type="file" 
-                                accept="image/*"
-                                onChange={(e) => setCoverArtName(e.target.files?.[0]?.name || "")}
-                                disabled={isUploading} 
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="audio-file">Audio File</Label>
-                            <Input 
-                                id="audio-file" 
-                                type="file" 
-                                accept="audio/*"
-                                onChange={(e) => setAudioFileName(e.target.files?.[0]?.name || "")}
-                                disabled={isUploading}
-                             />
                         </div>
                         <Button type="submit" className="w-full sm:w-auto" disabled={isUploading}>
                             {isUploading ? "Uploading..." : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Track</>}
