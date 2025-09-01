@@ -1,7 +1,7 @@
 
 "use client"
 
-import { SidebarProvider, Sidebar } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar'
 import { MainSidebarNav } from './main-sidebar-nav'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/auth-context'
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { RightSidebar } from './right-sidebar'
 import { MainHeader } from './main-header'
 
-function AppBody({ children }: { children: React.React.Node }) {
+function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
     let themeClass = '';
     if (context?.appUser?.plan === 'premium') {
@@ -41,22 +41,22 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
-      <MainHeader />
       <SidebarProvider>
-        <div className="mx-auto max-w-screen-xl">
-          <div className="flex justify-center">
-              <aside className="w-auto xl:w-[275px] shrink-0">
-                  <Sidebar className="sticky top-0 h-screen">
-                    <MainSidebarNav />
-                  </Sidebar>
-              </aside>
-              <div className="w-full max-w-[700px] border-x min-w-0">
-                  {children}
+         <div className="md:flex">
+            <Sidebar>
+              <MainSidebarNav />
+            </Sidebar>
+            <main className="flex-1">
+              <MainHeader />
+              <div className="flex justify-center">
+                  <div className="w-full max-w-[700px] border-x min-w-0">
+                      {children}
+                  </div>
+                  <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+                    <RightSidebar />
+                  </aside>
               </div>
-              <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
-                <RightSidebar />
-              </aside>
-          </div>
+            </main>
         </div>
       </SidebarProvider>
     </AppBody>

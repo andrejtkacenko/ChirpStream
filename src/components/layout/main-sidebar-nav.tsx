@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, PanelLeft, Feather, Bookmark, Settings, Music, UploadCloud, Music4 } from 'lucide-react'
+import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, Feather, Bookmark, Settings, Music, Music4 } from 'lucide-react'
 import {
   SidebarContent,
   SidebarMenu,
@@ -11,22 +11,25 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   useSidebar,
-  SidebarTrigger,
+  SidebarHeader,
+  Sidebar,
+  SidebarTrigger
 } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuLabel } from '../ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup } from '../ui/dropdown-menu'
 import { useAuth } from '@/context/auth-context'
 import type { User as FirebaseUser } from 'firebase/auth'
 import { cn } from '@/lib/utils'
 import { SettingsDialog } from '../settings/settings-dialog'
-import { markStudioNotificationAsSeen } from '@/lib/data'
 import { useToast } from '@/hooks/use-toast'
+import { markStudioNotificationAsSeen } from '@/lib/data'
 
 export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
   const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers, refreshAppUser } = useAuth();
+  const { isMobile, open, setOpen } = useSidebar();
   const { toast } = useToast();
   
   const menuItems = appUser ? [
@@ -77,29 +80,38 @@ export function MainSidebarNav() {
   
   return (
     <>
+      <SidebarHeader>
+        <div className="flex items-center gap-2">
+            <SidebarTrigger className="md:hidden" />
+            <Link href="/" className="flex items-center gap-2">
+                <Wind className="h-6 w-6 text-primary" />
+                <span className="font-bold text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">ChirpStream</span>
+            </Link>
+        </div>
+      </SidebarHeader>
       <SidebarContent className="p-4">
           <SidebarMenu>
           {appUser && menuItems.map((item) => {
-             if (item.requiredArtist && !appUser.isArtist) {
+              if (item.requiredArtist && !appUser.isArtist) {
                 return null;
               }
               const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
 
               return (
-              <SidebarMenuItem key={item.label}>
-              <Link href={item.href} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
-                  <SidebarMenuButton
-                  size="lg"
-                  isActive={isActive(item.href)}
-                  tooltip={{children: item.label}}
-                  asChild={false}
-                  className={cn("font-semibold justify-center xl:justify-start", showGlow && "animate-glow")}
-                  >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-lg hidden xl:flex">{item.label}</span>
-                  </SidebarMenuButton>
-              </Link>
-              </SidebarMenuItem>
+                <SidebarMenuItem key={item.label}>
+                <Link href={item.href} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
+                    <SidebarMenuButton
+                    size="lg"
+                    isActive={isActive(item.href)}
+                    tooltip={{children: item.label}}
+                    asChild={false}
+                    className={cn("font-semibold justify-start", showGlow && "animate-glow")}
+                    >
+                    <item.icon className="h-6 w-6" />
+                    <span className="text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
               )
             })}
           {appUser && (
@@ -110,10 +122,10 @@ export function MainSidebarNav() {
                   isActive={pathname.startsWith('/settings')}
                   tooltip={{children: "Settings"}}
                   asChild={false}
-                  className="font-semibold justify-center xl:justify-start"
+                  className="font-semibold justify-start"
                 >
                   <Settings className="h-6 w-6" />
-                  <span className="text-lg hidden xl:flex">Settings</span>
+                  <span className="text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">Settings</span>
                 </SidebarMenuButton>
               </SettingsDialog>
             </SidebarMenuItem>
@@ -125,19 +137,19 @@ export function MainSidebarNav() {
                   isActive={isActive('/login')}
                   tooltip={{children: "Login"}}
                   asChild={false}
-                  className={cn('justify-center xl:justify-start')}
+                  className="justify-start"
                   >
                   <LogIn />
-                  <span className='hidden xl:flex'>Login</span>
+                  <span>Login</span>
                   </SidebarMenuButton>
               </Link>
               </SidebarMenuItem>
           )}
           </SidebarMenu>
           {appUser && (
-            <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4 xl:w-full w-12 h-12 p-0 xl:h-auto xl:p-2">
-                <span className='hidden xl:flex'>Post</span>
-                <Feather className="h-6 w-6 flex xl:hidden" />
+            <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4">
+                <span className='group-data-[collapsible=icon]/sidebar-wrapper:hidden'>Post</span>
+                <Feather className="h-6 w-6 hidden group-data-[collapsible=icon]/sidebar-wrapper:flex" />
             </Button>
           )}
       </SidebarContent>
@@ -145,14 +157,14 @@ export function MainSidebarNav() {
         {appUser && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-16 p-0 xl:p-2 justify-center xl:justify-start">
+              <Button variant="ghost" className="w-full justify-start h-16 p-2">
                 <div className="flex justify-between items-center w-full">
                   <div className="flex gap-3 items-center">
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
                       <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
                     </Avatar>
-                    <div className="text-left hidden xl:block">
+                    <div className="text-left group-data-[collapsible=icon]/sidebar-wrapper:hidden">
                         <p className="font-bold">{appUser.name}</p>
                         <p className="text-sm text-muted-foreground">@{appUser.username}</p>
                     </div>

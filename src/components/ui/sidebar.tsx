@@ -206,7 +206,10 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col h-full", 
+        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col h-screen sticky top-0 border-r", 
+          'transition-all duration-300 ease-in-out',
+          state === 'expanded' && 'w-72',
+          state === 'collapsed' && 'w-[5.5rem]',
           className
         )}
         data-state={state}
@@ -319,7 +322,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-2 p-4", className)}
       {...props}
     />
   )
@@ -523,6 +526,7 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), 
+          "group-data-[collapsible=icon]/sidebar-wrapper:justify-center group-data-[collapsible=icon]/sidebar-wrapper:px-0",
           className
         )}
         {...props}
