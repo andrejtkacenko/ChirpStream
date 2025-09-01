@@ -40,21 +40,19 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
-       <div className="container mx-auto flex justify-center">
-        <div className="flex w-full max-w-7xl">
-            <header className="w-72 shrink-0 p-4">
-                <div className="sticky top-0">
+       <div className="container mx-auto flex">
+            <header className="fixed top-0 h-full md:w-20 lg:w-64 shrink-0 p-4">
                 <MainSidebarNav />
-                </div>
             </header>
-            <main className="flex-1 max-w-[600px] border-x">
-                <MainHeader />
-                {children}
-            </main>
-            <aside className="hidden lg:block w-[350px] shrink-0 pt-6 pl-6">
-                <RightSidebar />
-            </aside>
-        </div>
+            <div className="md:ml-20 lg:ml-64 flex-grow flex">
+                <main className="flex-1 max-w-[600px] border-x">
+                    <MainHeader />
+                    {children}
+                </main>
+                <aside className="hidden lg:block w-[350px] shrink-0 pt-6 pl-6">
+                    <RightSidebar />
+                </aside>
+            </div>
       </div>
     </AppBody>
   )

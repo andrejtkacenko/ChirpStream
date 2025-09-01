@@ -70,8 +70,8 @@ export function MainSidebarNav() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 mb-4">
           <Link href="/" className="flex items-center gap-2">
-              <Wind className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">ChirpStream</span>
+              <Wind className="h-8 w-8 text-primary" />
+              <span className="font-bold text-lg hidden lg:inline">ChirpStream</span>
           </Link>
       </div>
       <nav className="flex flex-col gap-1">
@@ -87,13 +87,13 @@ export function MainSidebarNav() {
                     variant="ghost"
                     size="lg"
                     className={cn(
-                      "font-semibold text-lg justify-start w-full",
+                      "font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start",
                       isActive(item.href) && "bg-accent",
                       showGlow && "animate-glow"
                     )}
                   >
-                    <item.icon className="h-6 w-6 mr-4" />
-                    <span>{item.label}</span>
+                    <item.icon className="h-6 w-6 mr-0 lg:mr-4" />
+                    <span className="hidden lg:inline">{item.label}</span>
                   </Button>
               </Link>
             )
@@ -104,12 +104,12 @@ export function MainSidebarNav() {
                 variant="ghost"
                 size="lg"
                 className={cn(
-                    "font-semibold text-lg justify-start w-full",
+                    "font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start",
                     pathname.startsWith('/settings') && "bg-accent"
                 )}
               >
-                <Settings className="h-6 w-6 mr-4" />
-                <span>Settings</span>
+                <Settings className="h-6 w-6 mr-0 lg:mr-4" />
+                <span className="hidden lg:inline">Settings</span>
               </Button>
           </SettingsDialog>
         )}
@@ -118,18 +118,18 @@ export function MainSidebarNav() {
                 <Button
                     variant="ghost"
                     size="lg"
-                    className={cn("font-semibold text-lg justify-start w-full", isActive('/login') && "bg-accent")}
+                    className={cn("font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start", isActive('/login') && "bg-accent")}
                 >
-                    <LogIn className="h-6 w-6 mr-4" />
-                    <span>Login</span>
+                    <LogIn className="h-6 w-6 mr-0 lg:mr-4" />
+                    <span className="hidden lg:inline">Login</span>
                 </Button>
             </Link>
         )}
       </nav>
       {appUser && (
         <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4">
-            <span>Post</span>
-            <Feather className="h-6 w-6 ml-2" />
+            <span className="hidden lg:inline">Post</span>
+            <Feather className="h-6 w-6 lg:ml-2" />
         </Button>
       )}
       <div className="mt-auto">
@@ -143,7 +143,7 @@ export function MainSidebarNav() {
                         <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
                         <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
                       </Avatar>
-                      <div className="text-left">
+                      <div className="text-left hidden lg:inline">
                           <p className="font-bold">{appUser.name}</p>
                           <p className="text-sm text-muted-foreground">@{appUser.username}</p>
                       </div>
