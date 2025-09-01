@@ -67,14 +67,14 @@ export function MainSidebarNav() {
   }
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full items-center">
       <div className="flex items-center gap-2 mb-4">
           <Link href="/" className="flex items-center gap-2">
               <Wind className="h-8 w-8 text-primary" />
               <span className="font-bold text-lg hidden lg:inline">ChirpStream</span>
           </Link>
       </div>
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-1 w-full items-center">
         {appUser && menuItems.map((item) => {
             if (item.requiredArtist && !appUser.isArtist) {
               return null;
@@ -82,57 +82,59 @@ export function MainSidebarNav() {
             const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
 
             return (
-              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
+              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined} className="w-full flex justify-center">
                   <Button
                     variant="ghost"
                     size="lg"
                     className={cn(
-                      "font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start",
+                      "font-semibold text-lg justify-start w-auto lg:w-full",
                       isActive(item.href) && "bg-accent",
                       showGlow && "animate-glow"
                     )}
                   >
-                    <item.icon className="h-6 w-6 mr-0 lg:mr-4" />
+                    <item.icon className="h-6 w-6 lg:mr-4" />
                     <span className="hidden lg:inline">{item.label}</span>
                   </Button>
               </Link>
             )
           })}
         {appUser && (
-          <SettingsDialog>
-              <Button
-                variant="ghost"
-                size="lg"
-                className={cn(
-                    "font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start",
-                    pathname.startsWith('/settings') && "bg-accent"
-                )}
-              >
-                <Settings className="h-6 w-6 mr-0 lg:mr-4" />
-                <span className="hidden lg:inline">Settings</span>
-              </Button>
-          </SettingsDialog>
+          <div className="w-full flex justify-center">
+            <SettingsDialog>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className={cn(
+                      "font-semibold text-lg justify-start w-auto lg:w-full",
+                      pathname.startsWith('/settings') && "bg-accent"
+                  )}
+                >
+                  <Settings className="h-6 w-6 lg:mr-4" />
+                  <span className="hidden lg:inline">Settings</span>
+                </Button>
+            </SettingsDialog>
+          </div>
         )}
         {!appUser && !loading && (
-            <Link href="/login">
+            <Link href="/login" className="w-full flex justify-center">
                 <Button
                     variant="ghost"
                     size="lg"
-                    className={cn("font-semibold text-lg justify-start w-full lg:w-full md:w-auto md:justify-center lg:justify-start", isActive('/login') && "bg-accent")}
+                    className={cn("font-semibold text-lg justify-start w-auto lg:w-full", isActive('/login') && "bg-accent")}
                 >
-                    <LogIn className="h-6 w-6 mr-0 lg:mr-4" />
+                    <LogIn className="h-6 w-6 lg:mr-4" />
                     <span className="hidden lg:inline">Login</span>
                 </Button>
             </Link>
         )}
       </nav>
       {appUser && (
-        <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4">
+        <Button size="lg" className="rounded-full font-bold text-lg w-auto lg:w-full mt-4">
+            <Feather className="h-6 w-6 lg:mr-2" />
             <span className="hidden lg:inline">Post</span>
-            <Feather className="h-6 w-6 lg:ml-2" />
         </Button>
       )}
-      <div className="mt-auto">
+      <div className="mt-auto w-full">
         {appUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
