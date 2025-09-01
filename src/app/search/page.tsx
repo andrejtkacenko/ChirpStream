@@ -15,6 +15,7 @@ import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useToast } from "@/hooks/use-toast";
+import { MainLayout } from "@/components/layout/main-layout";
 
 
 function UserResultCard({ user }: { user: User }) {
@@ -182,7 +183,9 @@ function SearchPageContent() {
 function SearchPageWrapper() {
   return (
     <ProtectedRoute>
+      <MainLayout>
         <SearchPageContent />
+      </MainLayout>
     </ProtectedRoute>
   )
 }

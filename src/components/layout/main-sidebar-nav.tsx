@@ -4,17 +4,6 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Bell, Home, LogIn, Mail, Search, User, Wind, UserPlus, LogOut, Check, Gem, Feather, Bookmark, Settings, Music, Music4 } from 'lucide-react'
-import {
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  useSidebar,
-  SidebarHeader,
-  Sidebar,
-  SidebarTrigger
-} from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuGroup } from '../ui/dropdown-menu'
@@ -29,7 +18,6 @@ export function MainSidebarNav() {
   const pathname = usePathname()
   const router = useRouter();
   const { appUser, loading, logout, switchUser, users: firebaseUsers, appUsers, refreshAppUser } = useAuth();
-  const { isMobile, open, setOpen } = useSidebar();
   const { toast } = useToast();
   
   const menuItems = appUser ? [
@@ -79,132 +67,123 @@ export function MainSidebarNav() {
   }
   
   return (
-    <>
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
-            <Link href="/" className="flex items-center gap-2">
-                <Wind className="h-6 w-6 text-primary" />
-                <span className="font-bold text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">ChirpStream</span>
-            </Link>
-        </div>
-      </SidebarHeader>
-      <SidebarContent className="p-4">
-          <SidebarMenu>
-          {appUser && menuItems.map((item) => {
-              if (item.requiredArtist && !appUser.isArtist) {
-                return null;
-              }
-              const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-4">
+          <Link href="/" className="flex items-center gap-2">
+              <Wind className="h-6 w-6 text-primary" />
+              <span className="font-bold text-lg">ChirpStream</span>
+          </Link>
+      </div>
+      <nav className="flex flex-col gap-1">
+        {appUser && menuItems.map((item) => {
+            if (item.requiredArtist && !appUser.isArtist) {
+              return null;
+            }
+            const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
 
-              return (
-                <SidebarMenuItem key={item.label}>
-                <Link href={item.href} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
-                    <SidebarMenuButton
+            return (
+              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined}>
+                  <Button
+                    variant="ghost"
                     size="lg"
-                    isActive={isActive(item.href)}
-                    tooltip={{children: item.label}}
-                    asChild={false}
-                    className={cn("font-semibold justify-start", showGlow && "animate-glow")}
-                    >
-                    <item.icon className="h-6 w-6" />
-                    <span className="text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">{item.label}</span>
-                    </SidebarMenuButton>
-                </Link>
-                </SidebarMenuItem>
-              )
-            })}
-          {appUser && (
-            <SidebarMenuItem>
-              <SettingsDialog>
-                <SidebarMenuButton
-                  size="lg"
-                  isActive={pathname.startsWith('/settings')}
-                  tooltip={{children: "Settings"}}
-                  asChild={false}
-                  className="font-semibold justify-start"
-                >
-                  <Settings className="h-6 w-6" />
-                  <span className="text-lg group-data-[collapsible=icon]/sidebar-wrapper:hidden">Settings</span>
-                </SidebarMenuButton>
-              </SettingsDialog>
-            </SidebarMenuItem>
-          )}
-          {!appUser && !loading && (
-              <SidebarMenuItem>
-              <Link href="/login">
-                  <SidebarMenuButton
-                  isActive={isActive('/login')}
-                  tooltip={{children: "Login"}}
-                  asChild={false}
-                  className="justify-start"
+                    className={cn(
+                      "font-semibold text-lg justify-start w-full",
+                      isActive(item.href) && "bg-accent",
+                      showGlow && "animate-glow"
+                    )}
                   >
-                  <LogIn />
-                  <span>Login</span>
-                  </SidebarMenuButton>
+                    <item.icon className="h-6 w-6 mr-4" />
+                    <span>{item.label}</span>
+                  </Button>
               </Link>
-              </SidebarMenuItem>
-          )}
-          </SidebarMenu>
-          {appUser && (
-            <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4">
-                <span className='group-data-[collapsible=icon]/sidebar-wrapper:hidden'>Post</span>
-                <Feather className="h-6 w-6 hidden group-data-[collapsible=icon]/sidebar-wrapper:flex" />
-            </Button>
-          )}
-      </SidebarContent>
-      <SidebarFooter className='p-4 mt-auto'>
+            )
+          })}
         {appUser && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start h-16 p-2">
-                <div className="flex justify-between items-center w-full">
-                  <div className="flex gap-3 items-center">
-                    <Avatar className="h-10 w-10 shrink-0">
-                      <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
-                      <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-left group-data-[collapsible=icon]/sidebar-wrapper:hidden">
-                        <p className="font-bold">{appUser.name}</p>
-                        <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+          <SettingsDialog>
+              <Button
+                variant="ghost"
+                size="lg"
+                className={cn(
+                    "font-semibold text-lg justify-start w-full",
+                    pathname.startsWith('/settings') && "bg-accent"
+                )}
+              >
+                <Settings className="h-6 w-6 mr-4" />
+                <span>Settings</span>
+              </Button>
+          </SettingsDialog>
+        )}
+        {!appUser && !loading && (
+            <Link href="/login">
+                <Button
+                    variant="ghost"
+                    size="lg"
+                    className={cn("font-semibold text-lg justify-start w-full", isActive('/login') && "bg-accent")}
+                >
+                    <LogIn className="h-6 w-6 mr-4" />
+                    <span>Login</span>
+                </Button>
+            </Link>
+        )}
+      </nav>
+      {appUser && (
+        <Button size="lg" className="rounded-full font-bold text-lg w-full mt-4">
+            <span>Post</span>
+            <Feather className="h-6 w-6 ml-2" />
+        </Button>
+      )}
+      <div className="mt-auto">
+        {appUser && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="w-full justify-start h-16 p-2">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex gap-3 items-center">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={appUser.avatar ?? undefined} alt={appUser.name ?? ''} />
+                        <AvatarFallback>{appUser.name?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                          <p className="font-bold">{appUser.name}</p>
+                          <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
-               <DropdownMenuGroup>
-                {appUsers.map((u, i) => u && (
-                  <DropdownMenuItem key={u.id} onClick={() => firebaseUsers[i] && handleSwitchUser(firebaseUsers[i]!)}>
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex gap-3 items-center">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={u.avatar ?? undefined} alt={u.name ?? ''} />
-                            <AvatarFallback>{u.name?.[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="text-left">
-                            <p className="font-bold">{u.name}</p>
-                            <p className="text-sm text-muted-foreground">@{u.username}</p>
-                          </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-64 mb-2">
+                <DropdownMenuGroup>
+                  {appUsers.map((u, i) => u && (
+                    <DropdownMenuItem key={u.id} onClick={() => firebaseUsers[i] && handleSwitchUser(firebaseUsers[i]!)}>
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex gap-3 items-center">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={u.avatar ?? undefined} alt={u.name ?? ''} />
+                              <AvatarFallback>{u.name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="text-left">
+                              <p className="font-bold">{u.name}</p>
+                              <p className="text-sm text-muted-foreground">@{u.username}</p>
+                            </div>
+                        </div>
+                        {u.id === appUser.id && <Check className="h-4 w-4" />}
                       </div>
-                      {u.id === appUser.id && <Check className="h-4 w-4" />}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleAddAccount}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                <span>Add an existing account</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleAddAccount}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  <span>Add an existing account</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         )}
-      </SidebarFooter>
-    </>
+      </div>
+    </div>
   )
 }

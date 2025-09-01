@@ -1,14 +1,13 @@
 
 "use client"
 
-import { SidebarProvider, Sidebar } from '@/components/ui/sidebar'
 import { MainSidebarNav } from './main-sidebar-nav'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/auth-context'
 import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
-import { RightSidebar } from './right-sidebar'
+import { MainHeader } from './main-header'
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
@@ -40,19 +39,17 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
-      <SidebarProvider>
-         <div className="flex justify-center min-h-screen">
-            <Sidebar>
+       <div className="container mx-auto flex justify-center">
+          <header className="w-72 shrink-0 p-4">
+            <div className="sticky top-0">
               <MainSidebarNav />
-            </Sidebar>
-            <main className="flex-1 max-w-[600px] border-x">
-              {children}
-            </main>
-            <aside className="hidden lg:block pt-6 pl-6">
-              <RightSidebar />
-            </aside>
-        </div>
-      </SidebarProvider>
+            </div>
+          </header>
+          <main className="flex-1 max-w-[600px] border-x">
+            <MainHeader />
+            {children}
+          </main>
+      </div>
     </AppBody>
   )
 }

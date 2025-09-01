@@ -10,6 +10,7 @@ import { useAuth } from "@/context/auth-context";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MainLayout } from "@/components/layout/main-layout";
+import { RightSidebar } from "@/components/layout/right-sidebar";
 
 function FeedSkeleton() {
   return (
@@ -71,11 +72,24 @@ function HomePageContent() {
   );
 }
 
+function HomePageWithSidebar() {
+    return (
+        <div className="flex w-full">
+            <div className="flex-1">
+                <HomePageContent />
+            </div>
+            <aside className="hidden lg:block w-[350px] shrink-0 pt-6 pl-6">
+                <RightSidebar />
+            </aside>
+        </div>
+    )
+}
+
 export default function Home() {
   return (
     <ProtectedRoute>
       <MainLayout>
-        <HomePageContent />
+        <HomePageWithSidebar />
       </MainLayout>
     </ProtectedRoute>
   )
