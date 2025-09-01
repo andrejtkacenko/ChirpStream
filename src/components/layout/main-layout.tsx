@@ -42,7 +42,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-         <div className="md:flex">
+         <div className="flex">
             <Sidebar>
               <MainSidebarNav />
             </Sidebar>
