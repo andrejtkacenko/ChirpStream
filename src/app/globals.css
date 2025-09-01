@@ -5,6 +5,7 @@
 @layer base {
   html {
     @apply overflow-y-scroll;
+    --font-size-base: 16px;
   }
   html[style] {
     padding-right: 0 !important;
@@ -109,6 +110,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: var(--font-size-base);
   }
 }
 
