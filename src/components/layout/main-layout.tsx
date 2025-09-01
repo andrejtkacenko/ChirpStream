@@ -1,7 +1,7 @@
 
 "use client"
 
-import { SidebarProvider, Sidebar, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar } from '@/components/ui/sidebar'
 import { MainSidebarNav } from './main-sidebar-nav'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/context/auth-context'
@@ -9,7 +9,6 @@ import { usePathname } from 'next/navigation'
 import { Toaster } from '../ui/toaster'
 import { cn } from '@/lib/utils'
 import { RightSidebar } from './right-sidebar'
-import { MainHeader } from './main-header'
 
 function AppBody({ children }: { children: React.ReactNode }) {
     const context = useAuth();
@@ -21,7 +20,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <div className={cn("h-full", themeClass)}>
+        <div className={cn("min-h-screen", themeClass)}>
             {children}
             <Toaster />
         </div>
@@ -42,14 +41,14 @@ export function MainLayout({ children }: { children: ReactNode }) {
   return (
     <AppBody>
       <SidebarProvider>
-         <div className="flex justify-center">
+         <div className="flex justify-center min-h-screen">
             <Sidebar>
               <MainSidebarNav />
             </Sidebar>
             <main className="flex-1 max-w-[600px] border-x">
               {children}
             </main>
-            <aside className="hidden lg:block w-[350px] pt-6 pl-6 shrink-0">
+            <aside className="hidden lg:block pt-6 pl-6">
               <RightSidebar />
             </aside>
         </div>

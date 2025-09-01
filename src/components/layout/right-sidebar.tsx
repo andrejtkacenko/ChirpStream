@@ -4,7 +4,6 @@
 import { usePathname } from 'next/navigation'
 import { WhoToFollow } from "../chirpstream/who-to-follow";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,8 +28,15 @@ export function RightSidebar() {
       }
   }
 
+  const isHomePage = pathname === '/';
+
+  if (!isHomePage) {
+    // Этот div невидим, но занимает место, чтобы макет не "прыгал"
+    return <div className="w-[350px] shrink-0"></div>;
+  }
+
   return (
-    <div className="sticky top-6 flex flex-col gap-6">
+    <div className="sticky top-6 flex flex-col gap-6 w-[350px] shrink-0">
       <form onSubmit={handleSearch}>
           <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
