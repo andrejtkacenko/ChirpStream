@@ -5,6 +5,7 @@
 
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -275,9 +276,18 @@ export async function getPostWithReplies(postId: string): Promise<{ post: PostWi
     if (!hydratedPost) return null;
 
     const repliesRef = collection(db, 'posts');
-    const q = query(repliesRef, where('parentPostId', '==', postId), orderBy('createdAt', 'desc'));
+    // The query causing the index issue was here. Now we just filter.
+    const q = query(repliesRef, where('parentPostId', '==', postId));
     const repliesSnapshot = await getDocs(q);
     const replies = repliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+
+    // Sort on the client-side
+    replies.sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as string).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as string).getTime();
+        return dateB - dateA;
+    });
+
     const hydratedReplies = await hydratePosts(replies);
 
     return {
