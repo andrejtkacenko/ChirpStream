@@ -618,6 +618,7 @@ export async function addTrack({ artistId, artistName, artistUsername, trackName
         artistUsername,
         title: trackName,
         cover: `https://picsum.photos/seed/${trackName.replace(/\s+/g, '')}/400/400`, // Use track name for a unique-ish seed
+        audioUrl: "https://storage.googleapis.com/studiostoragetest/Lullaby.mp3", // Placeholder audio
         createdAt: serverTimestamp(),
     };
 

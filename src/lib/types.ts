@@ -82,5 +82,6 @@ export interface Track {
   artistId: string; // Artist's user ID
   artistUsername: string; // Artist's username for linking
   cover: string; // URL to cover art
+  audioUrl: string; // URL to the audio file
   createdAt: Timestamp | { seconds: number, nanoseconds: number } | string;
 }
