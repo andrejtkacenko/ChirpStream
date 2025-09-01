@@ -206,7 +206,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col h-screen sticky top-0 border-r", 
+        className={cn("hidden md:flex md:shrink-0 text-sidebar-foreground flex-col border-r", 
           'transition-all duration-300 ease-in-out',
           state === 'expanded' && 'w-72',
           state === 'collapsed' && 'w-[5.5rem]',
