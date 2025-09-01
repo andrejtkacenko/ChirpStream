@@ -25,6 +25,7 @@ export interface Post {
   reposts: number;
   replies: number;
   repostedBy?: string[];
+  parentPostId?: string; // ID of the post this is a reply to
 }
 
 export type PostWithAuthor = Post & { author: User };

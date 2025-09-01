@@ -4,6 +4,7 @@
 
 
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification } from './types';
@@ -215,8 +216,11 @@ export async function getPostsByAuthor(authorId: string): Promise<PostWithAuthor
     return hydratePosts(postsList);
 }
 
-export async function createPost(authorId: string, content: string, imageUrls?: string[]): Promise<string> {
+export async function createPost(authorId: string, content: string, imageUrls?: string[], parentPostId?: string): Promise<string> {
+    const batch = writeBatch(db);
     const postsCol = collection(db, 'posts');
+    const newPostRef = doc(postsCol); // Create a reference with a new ID
+
     const newPost: Omit<Post, 'id' | 'createdAt'> = {
       authorId,
       content,
@@ -224,18 +228,34 @@ export async function createPost(authorId: string, content: string, imageUrls?: 
       reposts: 0,
       replies: 0,
       repostedBy: [],
+      ...(parentPostId && { parentPostId }),
+      ...(imageUrls && imageUrls.length > 0 && { imageUrls }),
     };
 
-    if (imageUrls && imageUrls.length > 0) {
-      newPost.imageUrls = imageUrls;
-    }
-
-    const docRef = await addDoc(postsCol, {
+    batch.set(newPostRef, {
         ...newPost,
         createdAt: serverTimestamp()
     });
-    return docRef.id;
+
+    if (parentPostId) {
+        const parentPostRef = doc(db, 'posts', parentPostId);
+        batch.update(parentPostRef, { replies: increment(1) });
+
+        // Create notification for reply
+        const parentPostSnap = await getDoc(parentPostRef);
+        if (parentPostSnap.exists()) {
+            const parentPostData = parentPostSnap.data();
+            if (parentPostData.authorId !== authorId) {
+                // We are not awaiting this, it's a fire-and-forget
+                createNotification(parentPostData.authorId, authorId, 'reply', parentPostId);
+            }
+        }
+    }
+
+    await batch.commit();
+    return newPostRef.id;
 }
+
 
 export async function updatePost(postId: string, content: string): Promise<void> {
     const postRef = doc(db, 'posts', postId);
@@ -245,6 +265,25 @@ export async function updatePost(postId: string, content: string): Promise<void>
 export async function deletePost(postId: string): Promise<void> {
     const postRef = doc(db, 'posts', postId);
     await deleteDoc(postRef);
+}
+
+export async function getPostWithReplies(postId: string): Promise<{ post: PostWithAuthor, replies: PostWithAuthor[] } | null> {
+    const postData = await getPost(postId);
+    if (!postData) return null;
+
+    const [hydratedPost] = await hydratePosts([postData]);
+    if (!hydratedPost) return null;
+
+    const repliesRef = collection(db, 'posts');
+    const q = query(repliesRef, where('parentPostId', '==', postId), orderBy('createdAt', 'desc'));
+    const repliesSnapshot = await getDocs(q);
+    const replies = repliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+    const hydratedReplies = await hydratePosts(replies);
+
+    return {
+        post: hydratedPost,
+        replies: hydratedReplies
+    }
 }
 
 export async function toggleLike(postId: string, userId: string) {
