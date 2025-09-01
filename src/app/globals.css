@@ -6,6 +6,9 @@
   html {
     @apply overflow-y-scroll;
   }
+  html[style] {
+    padding-right: 0 !important;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
