@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useToast } from "@/hooks/use-toast";
-import { UploadCloud, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { addTrack, getTracksByArtist } from "@/lib/data";
@@ -42,7 +42,7 @@ function TracksSkeleton() {
 function StudioPageContent() {
     const { toast } = useToast();
     const { appUser } = useAuth();
-    const [isUploading, setIsUploading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [trackName, setTrackName] = useState("");
     const [artistTracks, setArtistTracks] = useState<Track[]>([]);
     const [isLoadingTracks, setIsLoadingTracks] = useState(true);
@@ -50,6 +50,8 @@ function StudioPageContent() {
     useEffect(() => {
         if (appUser?.isArtist) {
             fetchArtistTracks();
+        } else {
+            setIsLoadingTracks(false);
         }
     }, [appUser]);
 
@@ -66,7 +68,7 @@ function StudioPageContent() {
         if (!appUser || !appUser.isArtist) {
             toast({
                 title: "Unauthorized",
-                description: "You must be an artist to upload tracks.",
+                description: "You must be an artist to add tracks.",
                 variant: "destructive"
             });
             return;
@@ -81,10 +83,10 @@ function StudioPageContent() {
             return;
         }
 
-        setIsUploading(true);
+        setIsSubmitting(true);
         toast({
-            title: "Uploading track...",
-            description: `"${trackName}" is being uploaded.`,
+            title: "Adding track...",
+            description: `"${trackName}" is being added.`,
         });
 
         try {
@@ -96,7 +98,7 @@ function StudioPageContent() {
             });
             
             toast({
-                title: "Upload successful!",
+                title: "Track added!",
                 description: `"${trackName}" is now live.`,
             });
             setTrackName("");
@@ -104,13 +106,13 @@ function StudioPageContent() {
 
         } catch (error) {
             toast({
-                title: "Upload failed",
-                description: "Could not upload your track. Please try again.",
+                title: "Failed to add track",
+                description: "Could not add your track. Please try again.",
                 variant: "destructive"
             });
-            console.error("Upload error:", error);
+            console.error("Add track error:", error);
         } finally {
-            setIsUploading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -118,13 +120,13 @@ function StudioPageContent() {
         <main className="p-4 md:p-6">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold">Creator Studio</h1>
-                <p className="text-muted-foreground">Upload and manage your music.</p>
+                <p className="text-muted-foreground">Manage your music on ChirpStream.</p>
             </div>
             <div className="grid gap-8 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Upload a new track</CardTitle>
-                        <CardDescription>Fill in the details below to add a new track to your profile.</CardDescription>
+                        <CardTitle>Add a new track</CardTitle>
+                        <CardDescription>Enter a track name to add it to your profile. The audio and cover art will use placeholders for this prototype.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -135,11 +137,11 @@ function StudioPageContent() {
                                     placeholder="e.g. Midnight City" 
                                     value={trackName}
                                     onChange={(e) => setTrackName(e.target.value)}
-                                    disabled={isUploading}
+                                    disabled={isSubmitting}
                                 />
                             </div>
-                            <Button type="submit" className="w-full sm:w-auto" disabled={isUploading}>
-                                {isUploading ? "Uploading..." : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Track</>}
+                            <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
+                                {isSubmitting ? "Adding..." : <><Plus className="mr-2 h-4 w-4" /> Add Track</>}
                             </Button>
                         </form>
                     </CardContent>
@@ -148,7 +150,7 @@ function StudioPageContent() {
                 <Card>
                      <CardHeader>
                         <CardTitle>Your Tracks</CardTitle>
-                        <CardDescription>View, edit, or delete your uploaded music.</CardDescription>
+                        <CardDescription>View, edit, or delete your added music.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {isLoadingTracks ? (
@@ -176,7 +178,7 @@ function StudioPageContent() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">You haven't uploaded any tracks yet.</p>
+                            <p className="text-sm text-muted-foreground text-center py-4">You haven't added any tracks yet.</p>
                         )}
                     </CardContent>
                 </Card>
