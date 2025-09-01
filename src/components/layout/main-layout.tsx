@@ -40,8 +40,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
-       <div className="container mx-auto flex justify-center">
-        <div className="flex w-full max-w-7xl">
+       <div className="w-full flex justify-center">
+        <div className="w-full max-w-7xl flex">
           <header className="fixed top-0 h-full w-20 lg:w-64 shrink-0 p-4">
               <MainSidebarNav />
           </header>
