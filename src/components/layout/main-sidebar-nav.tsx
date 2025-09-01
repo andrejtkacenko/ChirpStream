@@ -67,14 +67,14 @@ export function MainSidebarNav() {
   }
   
   return (
-    <div className="flex flex-col h-full items-center">
+    <div className="flex flex-col h-full items-center lg:items-start">
       <div className="flex items-center gap-2 mb-4">
           <Link href="/" className="flex items-center gap-2">
               <Wind className="h-8 w-8 text-primary" />
               <span className="font-bold text-lg hidden lg:inline">ChirpStream</span>
           </Link>
       </div>
-      <nav className="flex flex-col gap-1 w-full items-center">
+      <nav className="flex flex-col gap-1 w-full items-center lg:items-start">
         {appUser && menuItems.map((item) => {
             if (item.requiredArtist && !appUser.isArtist) {
               return null;
@@ -82,14 +82,13 @@ export function MainSidebarNav() {
             const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
 
             return (
-              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined} className="w-full flex justify-center">
+              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined} className="w-full flex justify-center lg:justify-start">
                   <Button
                     variant="ghost"
                     size="lg"
                     className={cn(
-                      "font-semibold text-lg justify-start w-auto lg:w-full",
-                      isActive(item.href) && "bg-accent",
-                      showGlow && "animate-glow"
+                      "font-semibold text-lg justify-center lg:justify-start w-auto lg:w-full",
+                      isActive(item.href) && "bg-accent"
                     )}
                   >
                     <item.icon className="h-6 w-6 lg:mr-4" />
@@ -99,13 +98,13 @@ export function MainSidebarNav() {
             )
           })}
         {appUser && (
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center lg:justify-start">
             <SettingsDialog>
                 <Button
                   variant="ghost"
                   size="lg"
                   className={cn(
-                      "font-semibold text-lg justify-start w-auto lg:w-full",
+                      "font-semibold text-lg justify-center lg:justify-start w-auto lg:w-full",
                       pathname.startsWith('/settings') && "bg-accent"
                   )}
                 >
@@ -116,11 +115,11 @@ export function MainSidebarNav() {
           </div>
         )}
         {!appUser && !loading && (
-            <Link href="/login" className="w-full flex justify-center">
+            <Link href="/login" className="w-full flex justify-center lg:justify-start">
                 <Button
                     variant="ghost"
                     size="lg"
-                    className={cn("font-semibold text-lg justify-start w-auto lg:w-full", isActive('/login') && "bg-accent")}
+                    className={cn("font-semibold text-lg justify-center lg:justify-start w-auto lg:w-full", isActive('/login') && "bg-accent")}
                 >
                     <LogIn className="h-6 w-6 lg:mr-4" />
                     <span className="hidden lg:inline">Login</span>
@@ -129,7 +128,7 @@ export function MainSidebarNav() {
         )}
       </nav>
       {appUser && (
-        <Button size="lg" className="rounded-full font-bold text-lg w-auto lg:w-full mt-4">
+        <Button size="lg" className="rounded-full font-bold text-lg w-14 lg:w-full mt-4">
             <Feather className="h-6 w-6 lg:mr-2" />
             <span className="hidden lg:inline">Post</span>
         </Button>
@@ -138,7 +137,7 @@ export function MainSidebarNav() {
         {appUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start h-16 p-2">
+                <Button variant="ghost" className="w-full justify-center lg:justify-start h-16 p-2">
                   <div className="flex justify-between items-center w-full">
                     <div className="flex gap-3 items-center">
                       <Avatar className="h-10 w-10 shrink-0">
