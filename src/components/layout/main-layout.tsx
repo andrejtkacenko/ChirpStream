@@ -39,7 +39,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <AppBody>
-       <div className="container mx-auto flex justify-center">
+       <div className="container mx-auto flex">
           <header className="w-72 shrink-0 p-4">
             <div className="sticky top-0">
               <MainSidebarNav />
