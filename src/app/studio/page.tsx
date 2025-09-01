@@ -11,6 +11,7 @@ import { UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { addTrack } from "@/lib/data";
+import { MainLayout } from "@/components/layout/main-layout";
 
 function StudioPageContent() {
     const { toast } = useToast();
@@ -106,7 +107,9 @@ function StudioPageContent() {
 export default function StudioPage() {
     return (
         <ProtectedRoute>
-            <StudioPageContent />
+            <MainLayout>
+                <StudioPageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }
