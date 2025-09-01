@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState }from "react";
+import { useEffect, useState, useCallback }from "react";
 import { useParams, notFound } from "next/navigation";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { getPostWithReplies, createPost } from "@/lib/data";
@@ -115,21 +115,21 @@ function PostPageContent() {
     const [replies, setReplies] = useState<PostWithAuthor[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const loadPostData = async () => {
-        setLoading(true);
+    const loadPostData = useCallback(async () => {
         if (typeof postId !== 'string') return;
         const data = await getPostWithReplies(postId);
         if (!data) {
             notFound();
+        } else {
+            setPost(data.post);
+            setReplies(data.replies);
         }
-        setPost(data.post);
-        setReplies(data.replies);
-        setLoading(false);
-    }
+    }, [postId]);
     
     useEffect(() => {
-        loadPostData();
-    }, [postId]);
+        setLoading(true);
+        loadPostData().finally(() => setLoading(false));
+    }, [loadPostData]);
 
     if (loading || !post) {
         return <PostPageSkeleton />;
