@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Image from "next/image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward, Home, Music as MusicIcon, Compass, Radio, Bell } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
+import { MainLayout } from "@/components/layout/main-layout";
 
 const musicTracks = [
   {
@@ -101,36 +102,6 @@ function MusicPageContent() {
 
     return (
         <main>
-             <div className="p-4 border-b">
-                <h1 className="text-2xl font-bold">Explore Music</h1>
-                <p className="text-muted-foreground">Discover new tracks and artists.</p>
-            </div>
-            
-            <div className="p-4 space-y-4 border-b">
-                <nav className="flex flex-row space-x-1">
-                    <Button variant="ghost" className="font-semibold text-base">
-                        <Home className="mr-2 h-5 w-5" />
-                        Главная
-                    </Button>
-                    <Button variant="ghost" className="text-base">
-                        <MusicIcon className="mr-2 h-5 w-5" />
-                        Моя музыка
-                    </Button>
-                    <Button variant="ghost" className="text-base">
-                        <Compass className="mr-2 h-5 w-5" />
-                        Обзор
-                    </Button>
-                    <Button variant="ghost" className="text-base">
-                        <Radio className="mr-2 h-5 w-5" />
-                        Радио
-                    </Button>
-                    <Button variant="ghost" className="text-base">
-                         <Bell className="mr-2 h-5 w-5" />
-                        Обновления
-                    </Button>
-                </nav>
-            </div>
-
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {musicTracks.map(track => (
                     <Card key={track.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedTrack(track)}>
@@ -157,7 +128,9 @@ function MusicPageContent() {
 export default function MusicPage() {
     return (
         <ProtectedRoute>
-            <MusicPageContent />
+            <MainLayout>
+                <MusicPageContent />
+            </MainLayout>
         </ProtectedRoute>
     )
 }
