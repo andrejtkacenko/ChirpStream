@@ -19,7 +19,8 @@ export function RightSidebar() {
   const isHomePage = pathname === '/';
 
   if (!isHomePage) {
-    return null;
+    // Возвращаем пустой div, чтобы зарезервировать место и избежать "прыжков" макета
+    return <div />;
   }
 
   return (
