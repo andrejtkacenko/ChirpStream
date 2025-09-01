@@ -11,8 +11,8 @@ export interface User {
   followers: string[];
   plan: 'free' | 'premium' | 'premium_plus';
   bookmarks: string[];
-  isArtist?: boolean;
-  hasSeenStudioNotification?: boolean;
+  isArtist: boolean;
+  hasSeenStudioNotification: boolean;
   notificationSettings?: {
     newFollowers?: boolean;
     postLikes?: boolean;

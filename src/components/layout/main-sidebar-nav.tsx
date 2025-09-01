@@ -44,13 +44,16 @@ export function MainSidebarNav() {
     switchUser(user);
   }
 
-  const handleStudioClick = async () => {
+  const handleStudioClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (appUser && appUser.isArtist && !appUser.hasSeenStudioNotification) {
+      e.preventDefault(); // Prevent navigation until state is updated
       try {
         await markStudioNotificationAsSeen(appUser.id);
         await refreshAppUser();
+        router.push('/studio'); // Navigate after state update
       } catch (error) {
         toast({ title: "Error", description: "Could not update notification status." });
+        router.push('/studio'); // Navigate anyway
       }
     }
   }
@@ -82,17 +85,19 @@ export function MainSidebarNav() {
             const showGlow = item.id === 'studio' && appUser.isArtist && !appUser.hasSeenStudioNotification;
 
             return (
-              <Link href={item.href} key={item.label} onClick={item.id === 'studio' ? handleStudioClick : undefined} className="w-full flex justify-center lg:justify-start">
+              <Link href={item.href} key={item.label} onClick={showGlow ? handleStudioClick : undefined} className="w-full flex justify-center lg:justify-start">
                   <Button
                     variant="ghost"
                     size="lg"
                     className={cn(
-                      "font-semibold text-lg justify-center lg:justify-start w-auto lg:w-full",
-                      isActive(item.href) && "bg-accent"
+                      "font-semibold text-lg justify-center lg:justify-start w-auto lg:w-full relative",
+                      isActive(item.href) && "bg-accent",
+                      showGlow && "animate-glow"
                     )}
                   >
                     <item.icon className="h-6 w-6 lg:mr-4" />
                     <span className="hidden lg:inline">{item.label}</span>
+                     {showGlow && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary" />}
                   </Button>
               </Link>
             )
@@ -146,7 +151,7 @@ export function MainSidebarNav() {
                       </Avatar>
                       <div className="text-left hidden lg:inline">
                           <p className="font-bold">{appUser.name}</p>
-                          <p className="text-sm text-muted-foreground">@{appUser.username}</p>
+                          <p className="text-muted-foreground">@{appUser.username}</p>
                       </div>
                     </div>
                   </div>

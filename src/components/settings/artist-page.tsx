@@ -87,6 +87,12 @@ export default function SettingsArtistPage() {
 
     return (
         <div className="space-y-6">
+            <div>
+                <h3 className="text-lg font-medium">Become an Artist</h3>
+                <p className="text-sm text-muted-foreground">
+                   Submit your application to get access to the Creator Studio and share your music.
+                </p>
+            </div>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <FormField
