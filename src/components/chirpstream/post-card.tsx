@@ -8,7 +8,7 @@ import type { Post, User, PostWithAuthor } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
-import { Crown, MoreHorizontal, Trash2, Edit } from "lucide-react";
+import { Crown, MoreHorizontal, Trash2, Edit, Image as ImageIcon, X } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ import {
 import { deletePost, updatePost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +40,8 @@ type PostCardProps = {
   post: PostWithAuthor;
   author: User; // Author is now part of the post prop, but we keep it for consistency
 };
+
+const MAX_IMAGES = 4;
 
 const renderContent = (content: string) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -63,7 +65,15 @@ const renderContent = (content: string) => {
   });
 };
 
-const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
+const PostImageGrid = ({
+  imageUrls,
+  isEditing,
+  onRemoveImage,
+}: {
+  imageUrls: string[];
+  isEditing?: boolean;
+  onRemoveImage?: (index: number) => void;
+}) => {
   const count = imageUrls.length;
   if (count === 0) return null;
 
@@ -86,7 +96,7 @@ const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
           <div
             key={index}
             className={cn(
-              "relative",
+              "relative group",
               containerClassName
             )}
           >
@@ -96,6 +106,16 @@ const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
               fill
               className="object-cover w-full h-full"
             />
+            {isEditing && onRemoveImage && (
+                 <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-1 right-1 bg-black/50 hover:bg-black/75 rounded-full h-6 w-6 z-10"
+                    onClick={() => onRemoveImage(index)}
+                  >
+                    <X className="h-4 w-4 text-white" />
+                  </Button>
+            )}
           </div>
         );
       })}
@@ -111,6 +131,8 @@ export function PostCard({ post, author }: PostCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
+  const [editedImageUrls, setEditedImageUrls] = useState(post.imageUrls || []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getPostDate = () => {
     if (!post.createdAt) return new Date();
@@ -127,6 +149,18 @@ export function PostCard({ post, author }: PostCardProps) {
   const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
   const isAuthor = appUser?.id === author.id;
 
+  const handleEditClick = () => {
+    setEditedContent(post.content);
+    setEditedImageUrls(post.imageUrls || []);
+    setIsEditing(true);
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(post.content);
+    setEditedImageUrls(post.imageUrls || []);
+  }
+
   const handleDelete = async () => {
     try {
       await deletePost(post.id);
@@ -140,14 +174,18 @@ export function PostCard({ post, author }: PostCardProps) {
   };
   
   const handleUpdate = async () => {
-    if (editedContent.trim() === post.content.trim()) {
+    if (editedContent.trim() === post.content.trim() && JSON.stringify(editedImageUrls) === JSON.stringify(post.imageUrls || [])) {
         setIsEditing(false);
         return;
     }
     try {
-        await updatePost(post.id, editedContent);
+        await updatePost(post.id, {
+            content: editedContent,
+            imageUrls: editedImageUrls,
+        });
         toast({ title: "Post updated" });
         post.content = editedContent; // Mutate post object for immediate UI update
+        post.imageUrls = editedImageUrls;
     } catch (error) {
         toast({ title: "Failed to update post", variant: "destructive" });
     } finally {
@@ -155,8 +193,34 @@ export function PostCard({ post, author }: PostCardProps) {
     }
   }
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+        if (editedImageUrls.length + files.length > MAX_IMAGES) {
+            toast({
+                title: "Too many images",
+                description: `You can only upload a maximum of ${MAX_IMAGES} images.`,
+                variant: "destructive"
+            });
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEditedImageUrls(prev => [...prev, reader.result as string]);
+            }
+            reader.readAsDataURL(file);
+        })
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setEditedImageUrls(previews => previews.filter((_, i) => i !== index));
+  }
+
   return (
-    <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-card" onClick={() => router.push(`/${author.username}/status/${post.id}`)}>
+    <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-card" onClick={() => !isEditing && router.push(`/${author.username}/status/${post.id}`)}>
       <CardContent className="p-4 flex gap-4">
         <UserProfileHoverCard user={author}>
             <Link href={`/${author.username}`} onClick={(e) => e.stopPropagation()}>
@@ -188,7 +252,7 @@ export function PostCard({ post, author }: PostCardProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <DropdownMenuItem onClick={handleEditClick}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Edit</span>
                     </DropdownMenuItem>
@@ -205,23 +269,31 @@ export function PostCard({ post, author }: PostCardProps) {
           {isEditing ? (
               <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                 <Textarea value={editedContent} onChange={e => setEditedContent(e.target.value)} className="text-base" />
-                <div className="flex justify-end gap-2">
-                    <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
-                    <Button onClick={handleUpdate}>Save</Button>
+                <PostImageGrid imageUrls={editedImageUrls} isEditing={true} onRemoveImage={removeImage} />
+                <div className="flex justify-between items-center mt-2 border-t pt-4">
+                    <div>
+                        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" multiple />
+                        <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={editedImageUrls.length >= MAX_IMAGES}>
+                            <ImageIcon className="h-6 w-6 text-primary" />
+                        </Button>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
+                        <Button onClick={handleUpdate}>Save</Button>
+                    </div>
                 </div>
               </div>
           ) : (
-            <div className="text-base mt-1 whitespace-pre-wrap">
-                {renderContent(post.content)}
-            </div>
+            <>
+                <div className="text-base mt-1 whitespace-pre-wrap">
+                    {renderContent(post.content)}
+                </div>
+                {post.imageUrls && post.imageUrls.length > 0 && (
+                    <PostImageGrid imageUrls={post.imageUrls} />
+                )}
+                <PostActions post={post} />
+            </>
           )}
-          
-          {post.imageUrls && post.imageUrls.length > 0 && !isEditing && (
-            <PostImageGrid imageUrls={post.imageUrls} />
-          )}
-          
-          {!isEditing && <PostActions post={post} />}
-
         </div>
       </CardContent>
 

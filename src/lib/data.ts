@@ -1,6 +1,6 @@
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
-import { db, storage } from './firebase';
-import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
 
 // --- User Functions ---
@@ -244,9 +244,9 @@ export async function createPost(authorId: string, content: string, imageUrls?: 
 }
 
 
-export async function updatePost(postId: string, content: string): Promise<void> {
+export async function updatePost(postId: string, data: { content: string, imageUrls: string[] }): Promise<void> {
     const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, { content });
+    await updateDoc(postRef, data);
 }
 
 export async function deletePost(postId: string): Promise<void> {
