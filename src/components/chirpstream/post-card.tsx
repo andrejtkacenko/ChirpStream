@@ -207,16 +207,16 @@ export function PostCard({ post, author }: PostCardProps) {
                 </div>
               </div>
           ) : (
-            <>
-                <div className="text-base mt-1 whitespace-pre-wrap">
-                    {renderContent(post.content)}
-                </div>
-                {post.imageUrls && post.imageUrls.length > 0 && (
-                  <PostImageGrid imageUrls={post.imageUrls} />
-                )}
-                <PostActions post={post} />
-            </>
+            <div className="text-base mt-1 whitespace-pre-wrap">
+                {renderContent(post.content)}
+            </div>
           )}
+          
+          {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
+            <PostImageGrid imageUrls={post.imageUrls} />
+          )}
+          
+          {!isEditing && <PostActions post={post} />}
 
         </div>
       </CardContent>
