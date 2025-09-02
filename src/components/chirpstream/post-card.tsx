@@ -81,9 +81,9 @@ const PostImageGrid = ({
     <div
       className={cn(
         "mt-3 grid max-h-[512px] gap-1 rounded-2xl border overflow-hidden",
-        count > 2 && "grid-cols-2",
-        count === 2 && "grid-cols-2",
-        count === 1 && "grid-cols-1"
+        count === 1 && "grid-cols-1",
+        count > 1 && "grid-cols-2",
+        count === 3 && "grid-rows-2"
       )}
       onClick={(e) => e.stopPropagation()}
     >
@@ -96,7 +96,7 @@ const PostImageGrid = ({
           <div
             key={index}
             className={cn(
-              "relative group",
+              "relative group aspect-video",
               containerClassName
             )}
           >
@@ -104,6 +104,7 @@ const PostImageGrid = ({
               src={url}
               alt={`Post image ${index + 1}`}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover w-full h-full"
             />
             {isEditing && onRemoveImage && (
