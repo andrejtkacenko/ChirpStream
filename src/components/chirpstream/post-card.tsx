@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -69,10 +70,12 @@ const PostImageGrid = ({
   imageUrls,
   isEditing,
   onRemoveImage,
+  onImageClick,
 }: {
   imageUrls: string[];
   isEditing?: boolean;
   onRemoveImage?: (index: number) => void;
+  onImageClick?: (url: string) => void;
 }) => {
   const count = imageUrls.length;
   if (count === 0) return null;
@@ -88,17 +91,19 @@ const PostImageGrid = ({
       onClick={(e) => e.stopPropagation()}
     >
       {imageUrls.map((url, index) => {
-        let containerClassName = "";
+        let containerClassName = "aspect-video";
         if (count === 3 && index === 0) {
-          containerClassName = "row-span-2";
+          containerClassName = "row-span-2 aspect-auto";
         }
          return (
           <div
             key={index}
             className={cn(
-              "relative group aspect-video",
-              containerClassName
+              "relative group",
+              containerClassName,
+              !isEditing && "cursor-pointer"
             )}
+            onClick={() => onImageClick && !isEditing && onImageClick(url)}
           >
             <Image
               src={url}
@@ -133,6 +138,7 @@ export function PostCard({ post, author }: PostCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [editedImageUrls, setEditedImageUrls] = useState(post.imageUrls || []);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getPostDate = () => {
@@ -290,7 +296,7 @@ export function PostCard({ post, author }: PostCardProps) {
                     {renderContent(post.content)}
                 </div>
                 {post.imageUrls && post.imageUrls.length > 0 && (
-                    <PostImageGrid imageUrls={post.imageUrls} />
+                    <PostImageGrid imageUrls={post.imageUrls} onImageClick={setViewingImage} />
                 )}
                 <PostActions post={post} />
             </>
@@ -298,7 +304,7 @@ export function PostCard({ post, author }: PostCardProps) {
         </div>
       </CardContent>
 
-       <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
+      <AlertDialog open={isDeleting} onOpenChange={setIsDeleting}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -312,6 +318,22 @@ export function PostCard({ post, author }: PostCardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
+        <DialogContent className="max-w-4xl h-[90vh] p-2" onInteractOutside={(e) => e.stopPropagation()}>
+            {viewingImage && (
+                <div className="relative w-full h-full">
+                    <Image 
+                        src={viewingImage} 
+                        alt="Full screen image view"
+                        fill
+                        className="object-contain"
+                    />
+                </div>
+            )}
+        </DialogContent>
+      </Dialog>
+
     </Card>
   );
 }
