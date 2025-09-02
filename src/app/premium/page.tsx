@@ -23,7 +23,6 @@ const plans = [
         "Small reply boost",
         "Bookmark Folders",
         "Highlights Tab",
-        "Edit Post",
         "Longer Posts (1,000 chars)",
         "Half the ads in For You and Following feeds",
         "Get paid to post",

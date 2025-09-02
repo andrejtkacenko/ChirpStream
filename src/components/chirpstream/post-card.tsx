@@ -121,7 +121,7 @@ export function PostCard({ post, author }: PostCardProps) {
 
   const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
   const isAuthor = appUser?.id === author.id;
-  const canEdit = isAuthor && (appUser?.plan === 'premium' || appUser?.plan === 'premium_plus');
+  const canEdit = isAuthor;
 
   const handleDelete = async () => {
     try {
