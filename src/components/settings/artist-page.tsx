@@ -90,7 +90,7 @@ export default function SettingsArtistPage() {
             <div>
                 <h3 className="text-lg font-medium">Become an Artist</h3>
                 <p className="text-sm text-muted-foreground">
-                   Submit your application to get access to the Creator Studio and share your music.
+                   Submit your application to get access to the Creator Studio and share your music. (DEMO: Applications are auto-approved for this prototype).
                 </p>
             </div>
             <Form {...form}>
