@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link";
@@ -30,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -321,6 +322,7 @@ export function PostCard({ post, author }: PostCardProps) {
       
       <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
         <DialogContent className="max-w-4xl h-[90vh] p-2" onInteractOutside={(e) => e.stopPropagation()}>
+            <DialogTitle className="sr-only">Viewing image</DialogTitle>
             {viewingImage && (
                 <div className="relative w-full h-full">
                     <Image 
