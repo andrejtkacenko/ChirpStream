@@ -70,11 +70,10 @@ const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
   return (
     <div
       className={cn(
-        "mt-3 grid gap-1 rounded-2xl border overflow-hidden",
-        count === 1 && "grid-cols-1",
+        "mt-3 grid max-h-[512px] gap-1 rounded-2xl border overflow-hidden",
+        count > 2 && "grid-cols-2",
         count === 2 && "grid-cols-2",
-        count === 3 && "grid-cols-2",
-        count === 4 && "grid-cols-2"
+        count === 1 && "grid-cols-1"
       )}
       onClick={(e) => e.stopPropagation()}
     >
@@ -83,13 +82,19 @@ const PostImageGrid = ({ imageUrls }: { imageUrls: string[] }) => {
         if (count === 3 && index === 0) {
           containerClassName = "row-span-2";
         }
-        return (
-          <div key={index} className={cn("relative aspect-video", containerClassName)}>
+         return (
+          <div
+            key={index}
+            className={cn(
+              "relative",
+              containerClassName
+            )}
+          >
             <Image
               src={url}
               alt={`Post image ${index + 1}`}
               fill
-              className="object-cover"
+              className="object-cover w-full h-full"
             />
           </div>
         );
@@ -211,7 +216,7 @@ export function PostCard({ post, author }: PostCardProps) {
             </div>
           )}
           
-          {post.imageUrls && post.imageUrls.length > 0 && (
+          {post.imageUrls && post.imageUrls.length > 0 && !isEditing && (
             <PostImageGrid imageUrls={post.imageUrls} />
           )}
           
