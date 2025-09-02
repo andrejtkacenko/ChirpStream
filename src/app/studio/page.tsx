@@ -126,7 +126,7 @@ function StudioPageContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Add a new track</CardTitle>
-                        <CardDescription>Enter a track name to add it to your profile. The audio and cover art will use placeholders for this prototype.</CardDescription>
+                        <CardDescription>Enter a track name to add it to your profile. The audio and cover art will use placeholders for this prototype (DEMO).</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
