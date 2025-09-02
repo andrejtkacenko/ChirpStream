@@ -121,7 +121,6 @@ export function PostCard({ post, author }: PostCardProps) {
 
   const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
   const isAuthor = appUser?.id === author.id;
-  const canEdit = isAuthor;
 
   const handleDelete = async () => {
     try {
@@ -136,7 +135,7 @@ export function PostCard({ post, author }: PostCardProps) {
   };
   
   const handleUpdate = async () => {
-    if (editedContent === post.content) {
+    if (editedContent.trim() === post.content.trim()) {
         setIsEditing(false);
         return;
     }
@@ -184,10 +183,10 @@ export function PostCard({ post, author }: PostCardProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    {canEdit && <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Edit</span>
-                    </DropdownMenuItem>}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setIsDeleting(true)} className="text-destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>Delete</span>
@@ -212,7 +211,7 @@ export function PostCard({ post, author }: PostCardProps) {
             </div>
           )}
           
-          {!isEditing && post.imageUrls && post.imageUrls.length > 0 && (
+          {post.imageUrls && post.imageUrls.length > 0 && (
             <PostImageGrid imageUrls={post.imageUrls} />
           )}
           

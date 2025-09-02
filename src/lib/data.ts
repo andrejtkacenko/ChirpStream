@@ -1,5 +1,6 @@
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, storage } from './firebase';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
 
 // --- User Functions ---
