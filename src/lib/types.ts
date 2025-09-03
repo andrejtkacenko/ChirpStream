@@ -64,8 +64,6 @@ export interface Message {
      // Hydrated fields
     sender?: User;
     likes: string[];
-    replies: number;
-    reposts: number;
 }
 
 export interface Notification {

@@ -3,15 +3,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
-import { getConversationsForUser } from "@/lib/data";
-import type { Conversation } from "@/lib/types";
+import { getConversationsForUser, getUsersByIds, findOrCreateConversation } from "@/lib/data";
+import type { Conversation, User } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import { MailPlus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 function ConversationSkeleton() {
     return (
@@ -29,10 +35,64 @@ function ConversationSkeleton() {
     )
 }
 
+function NewMessageDialog({ open, onOpenChange, onUserSelected }: { open: boolean, onOpenChange: (open: boolean) => void, onUserSelected: (userId: string) => void }) {
+    const { appUser } = useAuth();
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (open && appUser?.following) {
+            setLoading(true);
+            getUsersByIds(appUser.following)
+                .then(setUsers)
+                .finally(() => setLoading(false));
+        }
+    }, [open, appUser]);
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>New Message</DialogTitle>
+                    <DialogDescription>Select someone you follow to start a conversation.</DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-72">
+                    <div className="p-4 flex flex-col gap-4">
+                    {loading ? (
+                        <p>Loading...</p>
+                    ) : users.length > 0 ? (
+                        users.map(user => (
+                            <div key={user.id} className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Avatar>
+                                        <AvatarImage src={user.avatar} alt={user.name} />
+                                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-bold">{user.name}</p>
+                                        <p className="text-sm text-muted-foreground">@{user.username}</p>
+                                    </div>
+                                </div>
+                                <Button onClick={() => onUserSelected(user.id)} size="sm">Message</Button>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-center text-muted-foreground">You don't follow anyone yet.</p>
+                    )}
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 function MessagesPageContent() {
     const { appUser, loading: authLoading } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
+    const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (appUser) {
@@ -49,11 +109,28 @@ function MessagesPageContent() {
         return formatDistanceToNow(date, { addSuffix: true });
     }
 
+    const handleSelectUser = async (targetUserId: string) => {
+        if (!appUser) return;
+        
+        setIsNewMessageDialogOpen(false);
+        toast({ title: "Starting conversation..." });
+
+        try {
+            const conversationId = await findOrCreateConversation(appUser.id, targetUserId);
+            router.push(`/messages/${conversationId}`);
+        } catch (error) {
+            console.error("Failed to start conversation:", error);
+            toast({ title: "Could not start conversation.", variant: "destructive" });
+        }
+    }
+
+
     if (loading || authLoading) {
         return (
             <main>
-                <div className="p-4 border-b">
+                <div className="p-4 border-b flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Messages</h1>
+                    <Skeleton className="h-10 w-10" />
                 </div>
                 <ConversationSkeleton />
             </main>
@@ -61,9 +138,13 @@ function MessagesPageContent() {
     }
 
     return (
+        <>
         <main>
-            <div className="p-4 border-b">
+            <div className="p-4 border-b flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Messages</h1>
+                <Button variant="ghost" size="icon" onClick={() => setIsNewMessageDialogOpen(true)}>
+                    <MailPlus className="h-6 w-6" />
+                </Button>
             </div>
             <div className="flex flex-col">
                 {conversations.length > 0 ? (
@@ -100,6 +181,12 @@ function MessagesPageContent() {
                 )}
             </div>
         </main>
+        <NewMessageDialog 
+            open={isNewMessageDialogOpen}
+            onOpenChange={setIsNewMessageDialogOpen}
+            onUserSelected={handleSelectUser}
+        />
+        </>
     )
 }
 

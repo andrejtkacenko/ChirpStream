@@ -444,28 +444,12 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
     const lowerCaseTerm = cleanedSearchTerm.toLowerCase();
     
     const postsRef = collection(db, 'posts');
-    const queries = [
-        // Query for tags
-        query(postsRef, where('tags', 'array-contains', lowerCaseTerm)),
-        // We can't do a full text search easily, so we'll fetch recent posts and filter client-side
-        query(postsRef, orderBy('createdAt', 'desc'), limit(200))
-    ];
+    const q = query(postsRef, where('tags', 'array-contains', lowerCaseTerm), orderBy('createdAt', 'desc'), limit(50));
+    const snapshot = await getDocs(q);
     
-    const [tagResults, recentPosts] = await Promise.all(queries.map(q => getDocs(q)));
-
-    const allDocs = new Map();
-    tagResults.forEach(doc => allDocs.set(doc.id, doc));
-    recentPosts.forEach(doc => allDocs.set(doc.id, doc));
-
-    const postsList = Array.from(allDocs.values()).map(doc => ({ id: doc.id, ...doc.data() } as Post));
+    const postsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
     
-    // Additional client-side filtering for content
-    const filteredPosts = postsList.filter(post => 
-        post.content.toLowerCase().includes(lowerCaseTerm) ||
-        (post.tags && post.tags.includes(lowerCaseTerm))
-    );
-    
-    return hydratePosts(filteredPosts);
+    return hydratePosts(postsList);
 }
 
 
@@ -553,8 +537,6 @@ export async function sendMessage(conversationId: string, senderId: string, text
         text,
         createdAt: timestamp,
         likes: [],
-        replies: 0,
-        reposts: 0,
     };
 
     await addDoc(messagesRef, newMessage);
@@ -749,5 +731,25 @@ export async function movePostToBookmarkFolder(userId: string, postId: string, f
         }
         
         transaction.update(userRef, { bookmarks, bookmarkFolders });
+    });
+}
+
+
+export async function toggleMessageLike(conversationId: string, messageId: string, userId: string) {
+    const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+    
+    await runTransaction(db, async (transaction) => {
+        const messageDoc = await transaction.get(messageRef);
+        if (!messageDoc.exists()) throw "Message does not exist!";
+
+        const messageData = messageDoc.data();
+        const likes = messageData.likes || [];
+        const isLiked = likes.includes(userId);
+
+        if (isLiked) {
+            transaction.update(messageRef, { likes: arrayRemove(userId) });
+        } else {
+            transaction.update(messageRef, { likes: arrayUnion(userId) });
+        }
     });
 }

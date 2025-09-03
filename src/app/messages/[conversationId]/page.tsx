@@ -5,17 +5,18 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
-import { getConversation, getMessagesForConversation, sendMessage } from "@/lib/data";
+import { getConversation, getMessagesForConversation, sendMessage, toggleMessageLike } from "@/lib/data";
 import type { Conversation, Message } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Heart } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
 import { Timestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 
 function ChatSkeleton() {
@@ -54,6 +55,7 @@ function ConversationPageContent() {
     const router = useRouter();
     const { conversationId } = params;
     const { appUser, loading: authLoading } = useAuth();
+    const { toast } = useToast();
 
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -98,8 +100,6 @@ function ConversationPageContent() {
             createdAt: new Date().toISOString(),
             sender: appUser,
             likes: [],
-            replies: 0,
-            reposts: 0,
         }
 
         setMessages(prevMessages => [...prevMessages, optimisticMessage]);
@@ -113,6 +113,22 @@ function ConversationPageContent() {
             setIsSending(false);
         }
     }
+
+    const handleLikeMessage = async (messageId: string) => {
+        if (!appUser || typeof conversationId !== 'string') return;
+
+        try {
+            await toggleMessageLike(conversationId, messageId, appUser.id);
+        } catch (error) {
+            console.error("Failed to like message:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update like status.",
+                variant: "destructive",
+            });
+        }
+    };
+
 
     if (loading || authLoading) {
         return <ChatSkeleton />;
@@ -152,9 +168,10 @@ function ConversationPageContent() {
                         if (!message.createdAt) return null; // Don't render message if timestamp isn't set yet
 
                         const messageDate = message.createdAt instanceof Timestamp ? message.createdAt.toDate() : new Date(message.createdAt as any);
+                        const isLikedByCurrentUser = message.likes?.includes(appUser?.id ?? '');
 
                         return (
-                            <div key={message.id} className={cn("flex items-end gap-2", isSender ? "justify-end" : "justify-start")}>
+                            <div key={message.id} className={cn("flex items-end gap-2 group", isSender ? "justify-end" : "justify-start")}>
                                 {!isSender && (
                                     <div className="w-8 shrink-0">
                                       {showAvatar && message.sender &&
@@ -165,17 +182,30 @@ function ConversationPageContent() {
                                        }
                                     </div>
                                 )}
-                                <div className="group relative max-w-xs md:max-w-md">
-                                    <div className={cn("px-4 py-2 rounded-lg break-words", 
-                                        isSender 
-                                        ? "bg-primary text-primary-foreground rounded-br-none" 
-                                        : "bg-muted rounded-bl-none"
-                                    )}>
-                                       {message.text}
+                                <div className={cn("flex items-center gap-2", isSender && "flex-row-reverse")}>
+                                    <div className="relative">
+                                        <div className={cn("px-4 py-2 rounded-lg break-words", 
+                                            isSender 
+                                            ? "bg-primary text-primary-foreground rounded-br-none" 
+                                            : "bg-muted rounded-bl-none"
+                                        )}>
+                                        {message.text}
+                                        </div>
+                                        {message.likes && message.likes.length > 0 && (
+                                            <div className="absolute bottom-[-10px] right-0 bg-background border rounded-full px-1.5 py-0.5 text-xs flex items-center gap-0.5">
+                                                <Heart className="h-3 w-3 text-destructive fill-destructive" />
+                                                <span>{message.likes.length}</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-xs text-muted-foreground px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {format(messageDate, 'p')}
-                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => handleLikeMessage(message.id)}
+                                    >
+                                        <Heart className={cn("h-4 w-4", isLikedByCurrentUser ? "text-destructive fill-destructive" : "text-muted-foreground")} />
+                                    </Button>
                                 </div>
                             </div>
                         )
