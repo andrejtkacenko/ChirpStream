@@ -37,6 +37,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
   if (!showAppShell) {
       return <AppBody>{children}</AppBody>;
   }
+  
+  const showRightSidebar = !pathname.startsWith('/messages');
 
   return (
     <AppBody>
@@ -50,9 +52,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
                   <MainHeader />
                   {children}
               </main>
-              <aside className="hidden md:block w-80 shrink-0 pt-6 pl-6">
+              {showRightSidebar && (
+                 <aside className="hidden md:block w-80 shrink-0 pt-6 pl-6">
                   <RightSidebar />
-              </aside>
+                 </aside>
+              )}
           </div>
         </div>
       </div>

@@ -141,11 +141,8 @@ function ConversationPageContent() {
     const otherParticipant = conversation.participantDetails.find(p => p.id !== appUser?.id);
 
     return (
-        <div className="flex flex-col h-full max-h-screen overflow-hidden">
+        <div className="flex flex-col h-full max-h-full overflow-hidden">
             <header className="flex items-center gap-4 p-2 border-b shrink-0">
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/messages')}>
-                    <ArrowLeft />
-                </Button>
                 {otherParticipant && (
                     <Link href={`/${otherParticipant.username}`} className="flex items-center gap-3">
                          <Avatar>

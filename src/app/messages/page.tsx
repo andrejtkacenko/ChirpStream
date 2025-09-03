@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import ProtectedRoute from "@/components/auth/protected-route";
 import { useAuth } from "@/context/auth-context";
 import { getConversationsForUser, getUsersByIds, findOrCreateConversation } from "@/lib/data";
@@ -12,12 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { MailPlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 function ConversationSkeleton() {
     return (
@@ -86,13 +86,14 @@ function NewMessageDialog({ open, onOpenChange, onUserSelected }: { open: boolea
     )
 }
 
-function MessagesPageContent() {
+export function MessagesPageContent() {
     const { appUser, loading: authLoading } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (appUser) {
@@ -136,11 +137,13 @@ function MessagesPageContent() {
             </main>
         )
     }
+    
+    const isActive = (convId: string) => pathname === `/messages/${convId}`;
 
     return (
         <>
         <main>
-            <div className="p-4 border-b flex justify-between items-center">
+            <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-background z-10">
                 <h1 className="text-2xl font-bold">Messages</h1>
                 <Button variant="ghost" size="icon" onClick={() => setIsNewMessageDialogOpen(true)}>
                     <MailPlus className="h-6 w-6" />
@@ -153,7 +156,7 @@ function MessagesPageContent() {
                         if (!otherParticipant) return null;
 
                         return (
-                            <Link key={conv.id} href={`/messages/${conv.id}`} className="block hover:bg-muted/50 transition-colors">
+                            <Link key={conv.id} href={`/messages/${conv.id}`} className={cn("block hover:bg-muted/50 transition-colors", isActive(conv.id) && "bg-muted")}>
                                 <div className="flex items-start gap-4 p-4 border-b">
                                     <Avatar className="h-12 w-12">
                                         <AvatarImage src={otherParticipant.avatar} />
@@ -190,12 +193,11 @@ function MessagesPageContent() {
     )
 }
 
-export default function MessagesPage() {
+export default function MessagesRootPage() {
     return (
-        <ProtectedRoute>
-            <MainLayout>
-                <MessagesPageContent />
-            </MainLayout>
-        </ProtectedRoute>
+        <div className="hidden md:flex flex-col items-center justify-center h-full text-center p-4">
+            <h2 className="text-2xl font-bold">Select a message</h2>
+            <p className="text-muted-foreground">Choose from your existing conversations, or start a new one.</p>
+        </div>
     )
 }
