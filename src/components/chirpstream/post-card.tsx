@@ -9,7 +9,7 @@ import type { Post, User, PostWithAuthor } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
-import { Crown, MoreHorizontal, Trash2, Edit, Image as ImageIcon, X } from "lucide-react";
+import { Crown, MoreHorizontal, Trash2, Edit, Image as ImageIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import {
   DropdownMenu,
@@ -76,7 +76,7 @@ const PostImageGrid = ({
   imageUrls: string[];
   isEditing?: boolean;
   onRemoveImage?: (index: number) => void;
-  onImageClick?: (url: string) => void;
+  onImageClick?: (index: number) => void;
 }) => {
   const count = imageUrls.length;
   if (count === 0) return null;
@@ -104,7 +104,7 @@ const PostImageGrid = ({
               containerClassName,
               !isEditing && "cursor-pointer"
             )}
-            onClick={() => onImageClick && !isEditing && onImageClick(url)}
+            onClick={() => onImageClick && !isEditing && onImageClick(index)}
           >
             <Image
               src={url}
@@ -139,7 +139,7 @@ export function PostCard({ post, author }: PostCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [editedImageUrls, setEditedImageUrls] = useState(post.imageUrls || []);
-  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [viewingImageIndex, setViewingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getPostDate = () => {
@@ -226,6 +226,18 @@ export function PostCard({ post, author }: PostCardProps) {
   const removeImage = (index: number) => {
     setEditedImageUrls(previews => previews.filter((_, i) => i !== index));
   }
+  
+  const handleNextImage = () => {
+    if (viewingImageIndex === null || !post.imageUrls || post.imageUrls.length <= 1) return;
+    setViewingImageIndex((prevIndex) => (prevIndex! + 1) % post.imageUrls!.length);
+  }
+
+  const handlePrevImage = () => {
+    if (viewingImageIndex === null || !post.imageUrls || post.imageUrls.length <= 1) return;
+    setViewingImageIndex((prevIndex) => (prevIndex! - 1 + post.imageUrls!.length) % post.imageUrls!.length);
+  }
+
+  const viewingImageUrl = viewingImageIndex !== null && post.imageUrls ? post.imageUrls[viewingImageIndex] : null;
 
   return (
     <Card className="border-0 border-b rounded-none last:border-b-0 cursor-pointer hover:bg-muted/50 transition-colors duration-200 bg-card" onClick={() => !isEditing && router.push(`/${author.username}/status/${post.id}`)}>
@@ -297,7 +309,7 @@ export function PostCard({ post, author }: PostCardProps) {
                     {renderContent(post.content)}
                 </div>
                 {post.imageUrls && post.imageUrls.length > 0 && (
-                    <PostImageGrid imageUrls={post.imageUrls} onImageClick={setViewingImage} />
+                    <PostImageGrid imageUrls={post.imageUrls} onImageClick={setViewingImageIndex} />
                 )}
                 <PostActions post={post} />
             </>
@@ -320,18 +332,28 @@ export function PostCard({ post, author }: PostCardProps) {
         </AlertDialogContent>
       </AlertDialog>
       
-      <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
-        <DialogContent className="max-w-4xl h-[90vh] p-2" onInteractOutside={(e) => e.stopPropagation()}>
+      <Dialog open={viewingImageIndex !== null} onOpenChange={() => setViewingImageIndex(null)}>
+        <DialogContent className="max-w-4xl h-[90vh] p-0 border-0 bg-transparent flex items-center justify-center" onInteractOutside={(e) => e.stopPropagation()}>
             <DialogTitle className="sr-only">Viewing image</DialogTitle>
-            {viewingImage && (
+            {viewingImageUrl && (
                 <div className="relative w-full h-full">
                     <Image 
-                        src={viewingImage} 
+                        src={viewingImageUrl} 
                         alt="Full screen image view"
                         fill
                         className="object-contain"
                     />
                 </div>
+            )}
+            {post.imageUrls && post.imageUrls.length > 1 && (
+              <>
+                <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handlePrevImage}>
+                    <ChevronLeft className="h-8 w-8" />
+                </Button>
+                <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handleNextImage}>
+                    <ChevronRight className="h-8 w-8" />
+                </Button>
+              </>
             )}
         </DialogContent>
       </Dialog>
