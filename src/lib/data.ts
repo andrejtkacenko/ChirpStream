@@ -1,4 +1,5 @@
 
+
 import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
@@ -154,10 +155,22 @@ export async function getPostsByIds(ids: string[]): Promise<PostWithAuthor[]> {
 
 export async function getBookmarkedPosts(userId: string): Promise<PostWithAuthor[]> {
     const user = await getUserById(userId);
-    if (!user || !user.bookmarks || user.bookmarks.length === 0) {
+    if (!user) {
         return [];
     }
-    return getPostsByIds(user.bookmarks);
+    
+    const allBookmarkedIds = [...(user.bookmarks || [])];
+    if (user.bookmarkFolders) {
+        user.bookmarkFolders.forEach(folder => {
+            allBookmarkedIds.push(...folder.postIds);
+        });
+    }
+
+    if (allBookmarkedIds.length === 0) {
+        return [];
+    }
+    
+    return getPostsByIds([...new Set(allBookmarkedIds)]);
 }
 
 export async function getPostsForFeed(userId: string): Promise<PostWithAuthor[]> {
@@ -244,7 +257,7 @@ export async function createPost(authorId: string, content: string, imageUrls?: 
 }
 
 
-export async function updatePost(postId: string, data: { content: string, imageUrls: string[] }): Promise<void> {
+export async function updatePost(postId: string, data: { content?: string, imageUrls?: string[] }): Promise<void> {
     const postRef = doc(db, 'posts', postId);
     await updateDoc(postRef, data);
 }
@@ -312,19 +325,35 @@ export async function toggleLike(postId: string, userId: string) {
 export async function toggleBookmark(postId: string, userId: string) {
     const userRef = doc(db, "users", userId);
     const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-        throw new Error("User not found");
-    }
+    if (!userSnap.exists()) throw new Error("User not found");
+    const userData = userSnap.data() as User;
 
-    const userData = userSnap.data();
-    const bookmarks = userData.bookmarks || [];
-    const isBookmarked = bookmarks.includes(postId);
+    const allBookmarkIds = [
+        ...(userData.bookmarks || []),
+        ...(userData.bookmarkFolders || []).flatMap(f => f.postIds)
+    ];
 
-    if (isBookmarked) {
-        await updateDoc(userRef, {
-            bookmarks: arrayRemove(postId)
-        });
+    if (allBookmarkIds.includes(postId)) {
+        // Post is bookmarked, so remove it from wherever it is.
+        const batch = writeBatch(db);
+
+        // From root bookmarks
+        if (userData.bookmarks?.includes(postId)) {
+            batch.update(userRef, { bookmarks: arrayRemove(postId) });
+        }
+        
+        // From folders
+        if (userData.bookmarkFolders) {
+            const updatedFolders = userData.bookmarkFolders.map(folder => ({
+                ...folder,
+                postIds: folder.postIds.filter(id => id !== postId)
+            }));
+            batch.update(userRef, { bookmarkFolders: updatedFolders });
+        }
+        await batch.commit();
+
     } else {
+        // Post is not bookmarked, add it to the root bookmarks.
         await updateDoc(userRef, {
             bookmarks: arrayUnion(postId)
         });
@@ -651,4 +680,54 @@ export async function getTracksByArtist(artistId: string): Promise<Track[]> {
     });
 
     return tracks;
+}
+
+// --- Bookmark Folder Functions ---
+export async function createBookmarkFolder(userId: string, folderName: string): Promise<void> {
+    const userRef = doc(db, "users", userId);
+    const newFolder = {
+        id: doc(collection(db, 'users')).id, // Generate a unique ID
+        name: folderName,
+        postIds: [],
+    };
+    await updateDoc(userRef, {
+        bookmarkFolders: arrayUnion(newFolder)
+    });
+}
+
+export async function movePostToBookmarkFolder(userId: string, postId: string, fromFolderId: string | 'root', toFolderId: string | 'root'): Promise<void> {
+    const userRef = doc(db, 'users', userId);
+
+    await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+        if (!userDoc.exists()) throw "User does not exist!";
+        
+        const userData = userDoc.data() as User;
+        const bookmarks = userData.bookmarks || [];
+        const bookmarkFolders = userData.bookmarkFolders || [];
+
+        // Remove from the source
+        if (fromFolderId === 'root') {
+            const index = bookmarks.indexOf(postId);
+            if (index > -1) bookmarks.splice(index, 1);
+        } else {
+            const folder = bookmarkFolders.find(f => f.id === fromFolderId);
+            if (folder) {
+                const index = folder.postIds.indexOf(postId);
+                if (index > -1) folder.postIds.splice(index, 1);
+            }
+        }
+
+        // Add to the destination
+        if (toFolderId === 'root') {
+            if (!bookmarks.includes(postId)) bookmarks.push(postId);
+        } else {
+            const folder = bookmarkFolders.find(f => f.id === toFolderId);
+            if (folder && !folder.postIds.includes(postId)) {
+                folder.postIds.push(postId);
+            }
+        }
+        
+        transaction.update(userRef, { bookmarks, bookmarkFolders });
+    });
 }

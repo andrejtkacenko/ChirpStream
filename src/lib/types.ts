@@ -10,7 +10,12 @@ export interface User {
   following: string[];
   followers: string[];
   plan: 'free' | 'premium' | 'premium_plus';
-  bookmarks: string[];
+  bookmarks: string[]; // For posts not in any folder
+  bookmarkFolders?: {
+    id: string;
+    name: string;
+    postIds: string[];
+  }[];
   isArtist: boolean;
   hasSeenStudioNotification: boolean;
   notificationSettings: {

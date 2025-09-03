@@ -4,12 +4,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Repeat, Share, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Repeat, Share, Bookmark, FolderPlus } from "lucide-react";
 import type { Post } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
-import { toggleLike, toggleBookmark, repostPost } from "@/lib/data";
+import { toggleBookmark, movePostToBookmarkFolder, toggleLike, repostPost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export function PostActions({ post }: { post: Post }) {
   const { appUser, refreshAppUser } = useAuth();
@@ -27,7 +37,13 @@ export function PostActions({ post }: { post: Post }) {
   useEffect(() => {
     if (appUser) {
       setIsLiked(Array.isArray(post.likes) && post.likes.includes(appUser.id));
-      setIsBookmarked(appUser.bookmarks?.includes(post.id) ?? false);
+
+      const allBookmarkIds = [
+        ...(appUser.bookmarks || []),
+        ...(appUser.bookmarkFolders || []).flatMap(f => f.postIds)
+      ];
+      setIsBookmarked(allBookmarkIds.includes(post.id));
+
       setIsReposted(Array.isArray(post.repostedBy) && post.repostedBy.includes(appUser.id));
     }
     setLikes(post.likes?.length || 0);
@@ -54,8 +70,8 @@ export function PostActions({ post }: { post: Post }) {
     }
   };
 
-  const handleBookmark = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleBookmarkToggle = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!appUser || isProcessingBookmark) return;
 
     setIsProcessingBookmark(true);
@@ -75,6 +91,35 @@ export function PostActions({ post }: { post: Post }) {
         setIsProcessingBookmark(false);
     }
   };
+
+  const handleMoveToFolder = async (e: React.MouseEvent, folderId: string | 'root') => {
+    e.stopPropagation();
+    if (!appUser) return;
+    
+    // Find which folder the post is currently in
+    let fromFolderId = 'root';
+    if (appUser.bookmarks?.includes(post.id)) {
+        fromFolderId = 'root';
+    } else if (appUser.bookmarkFolders) {
+        const foundFolder = appUser.bookmarkFolders.find(f => f.postIds.includes(post.id));
+        if (foundFolder) fromFolderId = foundFolder.id;
+    }
+
+    // Add to bookmarks if it's not already
+    if (!isBookmarked) {
+      await handleBookmarkToggle();
+    }
+    
+    try {
+      await movePostToBookmarkFolder(appUser.id, post.id, fromFolderId, folderId);
+      await refreshAppUser();
+      toast({ title: "Post moved" });
+    } catch (error) {
+       console.error(error);
+       toast({ title: "Failed to move post", variant: "destructive" });
+    }
+  }
+
 
   const handleReply = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -135,6 +180,17 @@ export function PostActions({ post }: { post: Post }) {
     }
   };
 
+  const isPremium = appUser?.plan === 'premium' || appUser?.plan === 'premium_plus';
+
+  const bookmarkAction = {
+      Icon: Bookmark,
+      label: "Bookmark",
+      color: isBookmarked ? "text-primary" : "hover:text-primary",
+      bgColor: "hover:bg-primary/10",
+      onClick: handleBookmarkToggle,
+      fillClass: isBookmarked ? "fill-current" : "",
+      isProcessing: isProcessingBookmark,
+  };
 
   const actions = [
     {
@@ -165,22 +221,7 @@ export function PostActions({ post }: { post: Post }) {
       fillClass: isLiked ? "fill-current" : "",
       isProcessing: isProcessingLike,
     },
-    {
-      Icon: Bookmark,
-      label: "Bookmark",
-      color: isBookmarked ? "text-primary" : "hover:text-primary",
-      bgColor: "hover:bg-primary/10",
-      onClick: handleBookmark,
-      fillClass: isBookmarked ? "fill-current" : "",
-      isProcessing: isProcessingBookmark,
-    },
-    {
-      Icon: Share,
-      label: "Share",
-      color: "hover:text-primary",
-      bgColor: "hover:bg-primary/10",
-      onClick: handleShare,
-    },
+    // Bookmark and Share are handled separately
   ];
 
   return (
@@ -211,6 +252,64 @@ export function PostActions({ post }: { post: Post }) {
           )}
         </div>
       ))}
+      <div className="flex items-center">
+        {isPremium ? (
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("rounded-full", bookmarkAction.color, bookmarkAction.bgColor)}
+                        aria-label={bookmarkAction.label}
+                        disabled={bookmarkAction.isProcessing}
+                        >
+                        <bookmarkAction.Icon className={cn("h-5 w-5", bookmarkAction.fillClass)} />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem onClick={() => handleBookmarkToggle()}>
+                        {isBookmarked ? 'Remove from Bookmarks' : 'Add to Bookmarks'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Add to folder</DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                             <DropdownMenuItem onClick={(e) => handleMoveToFolder(e, 'root')}>
+                                Unsorted
+                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                            {appUser?.bookmarkFolders?.map(folder => (
+                            <DropdownMenuItem key={folder.id} onClick={(e) => handleMoveToFolder(e, folder.id)}>
+                                {folder.name}
+                            </DropdownMenuItem>
+                            ))}
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem>
+                                <FolderPlus className="mr-2 h-4 w-4" />
+                                Create new folder...
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                </DropdownMenuContent>
+             </DropdownMenu>
+        ) : (
+            <Button
+                variant="ghost"
+                size="icon"
+                className={cn("rounded-full", bookmarkAction.color, bookmarkAction.bgColor)}
+                aria-label={bookmarkAction.label}
+                onClick={bookmarkAction.onClick}
+                disabled={bookmarkAction.isProcessing}
+                >
+                <bookmarkAction.Icon className={cn("h-5 w-5", bookmarkAction.fillClass)} />
+            </Button>
+        )}
+        <Button variant="ghost" size="icon" className="rounded-full hover:text-primary hover:bg-primary/10" onClick={handleShare}>
+            <Share className="h-5 w-5"/>
+        </Button>
+      </div>
     </div>
   );
 }
