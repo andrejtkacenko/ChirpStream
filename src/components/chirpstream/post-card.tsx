@@ -103,15 +103,15 @@ const PostImageGrid = ({
       onClick={(e) => e.stopPropagation()}
     >
       {imageUrls.map((url, index) => {
-        let containerClassName = "aspect-video";
+        let containerClassName = "relative aspect-video";
         if (count === 3 && index === 0) {
-          containerClassName = "row-span-2 aspect-[9/16]";
+          containerClassName = "relative row-span-2 aspect-[9/16]";
         }
          return (
           <div
             key={index}
             className={cn(
-              "relative group",
+              "group",
               containerClassName,
               !isEditing && "cursor-pointer"
             )}
@@ -247,12 +247,14 @@ export function PostCard({ post, author }: PostCardProps) {
     setEditedImageUrls(previews => previews.filter((_, i) => i !== index));
   }
   
-  const handleNextImage = () => {
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (viewingImageIndex === null || !post.imageUrls || post.imageUrls.length <= 1) return;
     setViewingImageIndex((prevIndex) => (prevIndex! + 1) % post.imageUrls!.length);
   }
 
-  const handlePrevImage = () => {
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (viewingImageIndex === null || !post.imageUrls || post.imageUrls.length <= 1) return;
     setViewingImageIndex((prevIndex) => (prevIndex! - 1 + post.imageUrls!.length) % post.imageUrls!.length);
   }
