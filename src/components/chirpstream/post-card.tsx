@@ -94,7 +94,7 @@ const PostImageGrid = ({
       {imageUrls.map((url, index) => {
         let containerClassName = "aspect-video";
         if (count === 3 && index === 0) {
-          containerClassName = "row-span-2 aspect-auto";
+          containerClassName = "row-span-2 aspect-[9/16]";
         }
          return (
           <div
