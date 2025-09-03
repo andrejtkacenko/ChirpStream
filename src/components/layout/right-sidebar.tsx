@@ -3,10 +3,6 @@
 
 import { WhoToFollow } from "../chirpstream/who-to-follow";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Input } from "../ui/input";
-import { Search } from "lucide-react";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 const newsItems = [
     { topic: "Space", title: "NASA discovers new planet in nearby galaxy", posts: "12.3k posts" },
@@ -15,31 +11,8 @@ const newsItems = [
 ]
 
 export function RightSidebar() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
-
-  const handleSearch = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (searchQuery.trim()) {
-          router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      }
-  }
-
   return (
     <div className="sticky top-6 flex flex-col gap-6 w-full">
-      <form onSubmit={handleSearch}>
-          <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input 
-                  placeholder="Search ChirpStream" 
-                  className="pl-10 bg-secondary/50 border-none focus-visible:ring-primary focus-visible:ring-2 rounded-full"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-              />
-          </div>
-      </form>
-
       <Card className="bg-secondary/50 border-none">
         <CardHeader>
           <CardTitle>What's happening</CardTitle>
