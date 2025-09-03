@@ -143,6 +143,9 @@ function ConversationPageContent() {
     return (
         <div className="flex flex-col h-full max-h-full overflow-hidden">
             <header className="flex items-center gap-4 p-2 border-b shrink-0">
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => router.push('/messages')}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
                 {otherParticipant && (
                     <Link href={`/${otherParticipant.username}`} className="flex items-center gap-3">
                          <Avatar>
