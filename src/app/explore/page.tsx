@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { PostWithAuthor } from "@/lib/types";
 import { getPosts } from "@/lib/data";
 import { PostCard } from "@/components/chirpstream/post-card";
@@ -59,6 +59,11 @@ function ExplorePageContent() {
     loadExploreFeed();
   }, [loadExploreFeed]);
 
+  const trendingPosts = useMemo(() => [...posts].sort(() => 0.5 - Math.random()).slice(0, 10), [posts]);
+  const newsPosts = useMemo(() => [...posts].sort(() => 0.5 - Math.random()).slice(0, 10), [posts]);
+  const sportsPosts = useMemo(() => [...posts].sort(() => 0.5 - Math.random()).slice(0, 10), [posts]);
+
+
   return (
     <main>
       <div className="p-4 border-b sticky top-0 bg-background/80 backdrop-blur-sm z-10">
@@ -111,13 +116,31 @@ function ExplorePageContent() {
             )}
         </TabsContent>
          <TabsContent value="trending">
-            <div className="p-8 text-center text-muted-foreground">Trending content coming soon!</div>
+            {loading ? <FeedSkeleton /> : (
+              <div className="flex flex-col">
+                  {trendingPosts.map((post) => (
+                  <PostCard key={post.id} post={post} author={post.author} />
+                  ))}
+              </div>
+            )}
          </TabsContent>
          <TabsContent value="news">
-             <div className="p-8 text-center text-muted-foreground">News content coming soon!</div>
+             {loading ? <FeedSkeleton /> : (
+              <div className="flex flex-col">
+                  {newsPosts.map((post) => (
+                  <PostCard key={post.id} post={post} author={post.author} />
+                  ))}
+              </div>
+            )}
         </TabsContent>
          <TabsContent value="sports">
-             <div className="p-8 text-center text-muted-foreground">Sports content coming soon!</div>
+            {loading ? <FeedSkeleton /> : (
+              <div className="flex flex-col">
+                  {sportsPosts.map((post) => (
+                  <PostCard key={post.id} post={post} author={post.author} />
+                  ))}
+              </div>
+            )}
         </TabsContent>
       </Tabs>
     </main>
