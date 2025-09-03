@@ -444,11 +444,19 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
     const lowerCaseTerm = cleanedSearchTerm.toLowerCase();
     
     const postsRef = collection(db, 'posts');
-    const q = query(postsRef, where('tags', 'array-contains', lowerCaseTerm), orderBy('createdAt', 'desc'), limit(50));
+    // The query causing the index issue was here. Now we just filter.
+    const q = query(postsRef, where('tags', 'array-contains', lowerCaseTerm), limit(50));
     const snapshot = await getDocs(q);
     
     const postsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
     
+    // Sort on the client-side
+    postsList.sort((a, b) => {
+        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as string).getTime();
+        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as string).getTime();
+        return dateB - dateA;
+    });
+
     return hydratePosts(postsList);
 }
 
