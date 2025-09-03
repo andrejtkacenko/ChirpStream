@@ -97,7 +97,7 @@ function ArtistPageContent() {
     return (
         <main>
             <div className="relative h-64 md:h-96 w-full">
-                <Image src={artistStaticData.banner} alt={`${artist.name} banner`} layout="fill" className="object-cover" />
+                <Image src={artistStaticData.banner} alt={`${artist.name} banner`} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="absolute bottom-8 left-8">
                     {artistStaticData.isVerified && (
@@ -132,7 +132,7 @@ function ArtistPageContent() {
                                 <span className="text-muted-foreground w-6 text-center">{index + 1}</span>
                                 <Image src={track.cover} alt={track.title} width={40} height={40} className="rounded" />
                                 <span className="font-medium flex-1 truncate">{track.title}</span>
-                                <span className="text-muted-foreground text-sm">{Math.floor(Math.random() * 1000)}M</span>
+                                <span className="text-muted-foreground text-sm">{((track.title.length * (index + 1) * 12345) % 10000) / 10}M</span>
                             </CardContent>
                         </Card>
                     ))}

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useMemo } from "react";
 import type { PostWithAuthor, User } from "@/lib/types";
 import { getPosts, searchPosts, searchUsers, followUser, unfollowUser } from "@/lib/data";
 import { PostCard } from "@/components/chirpstream/post-card";
@@ -127,6 +127,21 @@ function ExplorePageContent() {
   const [loading, setLoading] = useState(true);
 
   const { user: authUser, loading: authLoading } = useAuth();
+
+  const trendingPosts = useMemo(() => {
+    return [...posts].sort((a,b) => (b.likes.length + b.reposts) - (a.likes.length + a.reposts))
+  }, [posts]);
+
+  const newsPosts = useMemo(() => {
+    const newsKeywords = ['release', 'update', 'new', 'bill'];
+    return posts.filter(p => newsKeywords.some(kw => p.content.toLowerCase().includes(kw)))
+  }, [posts]);
+
+  const sportsPosts = useMemo(() => {
+    const sportsKeywords = ['cup', 'game', 'finals', 'team', 'player'];
+    return posts.filter(p => sportsKeywords.some(kw => p.content.toLowerCase().includes(kw)))
+  }, [posts]);
+
   
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -269,7 +284,7 @@ function ExplorePageContent() {
               <TabsContent value="trending">
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
-                        {posts.slice().sort(() => 0.5 - Math.random()).map((post) => (
+                        {trendingPosts.map((post) => (
                         <PostCard key={post.id} post={post} author={post.author} />
                         ))}
                     </div>
@@ -278,7 +293,7 @@ function ExplorePageContent() {
               <TabsContent value="news">
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
-                        {posts.slice().sort(() => 0.5 - Math.random()).map((post) => (
+                        {newsPosts.map((post) => (
                         <PostCard key={post.id} post={post} author={post.author} />
                         ))}
                     </div>
@@ -287,7 +302,7 @@ function ExplorePageContent() {
               <TabsContent value="sports">
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
-                        {posts.slice().sort(() => 0.5 - Math.random()).map((post) => (
+                        {sportsPosts.map((post) => (
                         <PostCard key={post.id} post={post} author={post.author} />
                         ))}
                     </div>

@@ -108,7 +108,7 @@ function MusicPlayerModal({ track, onClose, onNext, onPrev }: { track: Track; on
                 <audio ref={audioRef} src={track.audioUrl} preload="metadata" />
                 <DialogHeader>
                     <div className="aspect-square relative w-full mt-4">
-                       <Image src={track.cover} alt={track.title} layout="fill" className="rounded-lg object-cover" />
+                       <Image src={track.cover} alt={track.title} fill className="rounded-lg object-cover" />
                     </div>
                     <DialogTitle className="text-center mt-4">{track.title}</DialogTitle>
                     <DialogDescription className="text-center">{track.artist}</DialogDescription>
@@ -145,8 +145,10 @@ function MusicPageContent() {
     const [selectedTrackIndex, setSelectedTrackIndex] = useState<number | null>(null);
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        setIsClient(true);
         const fetchTracks = async () => {
             setLoading(true);
             const fetchedTracks = await getTracks();
@@ -185,7 +187,7 @@ function MusicPageContent() {
                     <Card key={track.id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedTrackIndex(index)}>
                         <CardHeader className="p-0">
                             <div className="aspect-square relative">
-                                <Image src={track.cover} alt={track.title} layout="fill" className="rounded-t-lg object-cover" />
+                                <Image src={track.cover} alt={track.title} fill className="rounded-t-lg object-cover" />
                             </div>
                         </CardHeader>
                         <CardContent className="p-4">
@@ -202,7 +204,7 @@ function MusicPageContent() {
                     <p>No music has been uploaded yet.</p>
                 </div>
             )}
-            {selectedTrack && (
+            {isClient && selectedTrack && (
                  <MusicPlayerModal 
                     track={selectedTrack} 
                     onClose={() => setSelectedTrackIndex(null)}
