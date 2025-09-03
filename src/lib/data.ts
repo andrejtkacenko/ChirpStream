@@ -216,14 +216,15 @@ export async function getPostsByAuthor(authorId: string): Promise<PostWithAuthor
     return hydratePosts(postsList);
 }
 
-export async function createPost(authorId: string, content: string, imageUrls?: string[], parentPostId?: string): Promise<string> {
+export async function createPost(authorId: string, content: string, tags: string[], imageUrls?: string[], parentPostId?: string): Promise<string> {
     const batch = writeBatch(db);
     const postsCol = collection(db, 'posts');
     const newPostRef = doc(postsCol); // Create a reference with a new ID
 
-    const newPost: Omit<Post, 'id' | 'createdAt'> = {
+    const newPostData: Omit<Post, 'id' | 'createdAt'> = {
       authorId,
       content,
+      tags: tags,
       likes: [],
       reposts: 0,
       replies: 0,
@@ -233,7 +234,7 @@ export async function createPost(authorId: string, content: string, imageUrls?: 
     };
 
     batch.set(newPostRef, {
-        ...newPost,
+        ...newPostData,
         createdAt: serverTimestamp()
     });
 
@@ -257,7 +258,7 @@ export async function createPost(authorId: string, content: string, imageUrls?: 
 }
 
 
-export async function updatePost(postId: string, data: { content?: string, imageUrls?: string[] }): Promise<void> {
+export async function updatePost(postId: string, data: { content?: string, imageUrls?: string[], tags?: string[] }): Promise<void> {
     const postRef = doc(db, 'posts', postId);
     await updateDoc(postRef, data);
 }
@@ -438,14 +439,33 @@ export async function searchUsers(searchTerm: string): Promise<User[]> {
 
 export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]> {
     if (!searchTerm) return [];
-    const allPosts = await getPosts(200); 
-    const lowerCaseTerm = searchTerm.toLowerCase();
+    
+    const cleanedSearchTerm = searchTerm.startsWith('#') ? searchTerm.substring(1) : searchTerm;
+    const lowerCaseTerm = cleanedSearchTerm.toLowerCase();
+    
+    const postsRef = collection(db, 'posts');
+    const queries = [
+        // Query for tags
+        query(postsRef, where('tags', 'array-contains', lowerCaseTerm)),
+        // We can't do a full text search easily, so we'll fetch recent posts and filter client-side
+        query(postsRef, orderBy('createdAt', 'desc'), limit(200))
+    ];
+    
+    const [tagResults, recentPosts] = await Promise.all(queries.map(q => getDocs(q)));
 
-    const filteredPosts = allPosts.filter(post => 
-        post.content.toLowerCase().includes(lowerCaseTerm)
+    const allDocs = new Map();
+    tagResults.forEach(doc => allDocs.set(doc.id, doc));
+    recentPosts.forEach(doc => allDocs.set(doc.id, doc));
+
+    const postsList = Array.from(allDocs.values()).map(doc => ({ id: doc.id, ...doc.data() } as Post));
+    
+    // Additional client-side filtering for content
+    const filteredPosts = postsList.filter(post => 
+        post.content.toLowerCase().includes(lowerCaseTerm) ||
+        (post.tags && post.tags.includes(lowerCaseTerm))
     );
-
-    return filteredPosts;
+    
+    return hydratePosts(filteredPosts);
 }
 
 

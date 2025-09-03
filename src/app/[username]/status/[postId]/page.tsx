@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState, useCallback }from "react";
@@ -70,7 +71,7 @@ function ReplyForm({ parentPost, onReplyPosted }: { parentPost: PostWithAuthor, 
         if (!content.trim()) return;
         setIsSubmitting(true);
         try {
-            await createPost(appUser.id, content, [], parentPost.id);
+            await createPost(appUser.id, content, [], [], parentPost.id);
             setContent("");
             toast({ title: "Success!", description: "Your reply has been posted." });
             onReplyPosted();

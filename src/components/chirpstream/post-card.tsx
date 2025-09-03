@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { UserProfileHoverCard } from "./user-profile-hover-card";
+import { Input } from "../ui/input";
 
 type PostCardProps = {
   post: PostWithAuthor;
@@ -46,22 +47,32 @@ type PostCardProps = {
 const MAX_IMAGES = 4;
 
 const renderContent = (content: string) => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = content.split(urlRegex);
+  const parts = content.split(/([#@]\w+)/g);
   return parts.map((part, i) => {
-    if (part.match(urlRegex)) {
+    if (part.startsWith('#')) {
       return (
-        <a
+        <Link
           key={i}
-          href={part}
+          href={`/search?q=${encodeURIComponent(part)}`}
           className="text-primary hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
         >
           {part}
-        </a>
+        </Link>
       );
+    }
+    if (part.startsWith('@')) {
+        const username = part.substring(1);
+        return (
+            <Link
+                key={i}
+                href={`/${username}`}
+                className="text-primary hover:underline"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {part}
+            </Link>
+        )
     }
     return part;
   });
@@ -138,6 +149,7 @@ export function PostCard({ post, author }: PostCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
+  const [editedTags, setEditedTags] = useState((post.tags || []).join(" "));
   const [editedImageUrls, setEditedImageUrls] = useState(post.imageUrls || []);
   const [viewingImageIndex, setViewingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -160,6 +172,7 @@ export function PostCard({ post, author }: PostCardProps) {
   const handleEditClick = () => {
     setEditedContent(post.content);
     setEditedImageUrls(post.imageUrls || []);
+    setEditedTags((post.tags || []).map(t => `#${t}`).join(" "));
     setIsEditing(true);
   }
 
@@ -167,6 +180,7 @@ export function PostCard({ post, author }: PostCardProps) {
     setIsEditing(false);
     setEditedContent(post.content);
     setEditedImageUrls(post.imageUrls || []);
+    setEditedTags((post.tags || []).join(" "));
   }
 
   const handleDelete = async () => {
@@ -182,7 +196,11 @@ export function PostCard({ post, author }: PostCardProps) {
   };
   
   const handleUpdate = async () => {
-    if (editedContent.trim() === post.content.trim() && JSON.stringify(editedImageUrls) === JSON.stringify(post.imageUrls || [])) {
+    const newTags = editedTags.split(/[\s,]+/).filter(Boolean).map(t => t.startsWith('#') ? t.substring(1) : t);
+    
+    if (editedContent.trim() === post.content.trim() && 
+        JSON.stringify(editedImageUrls) === JSON.stringify(post.imageUrls || []) &&
+        JSON.stringify(newTags) === JSON.stringify(post.tags || [])) {
         setIsEditing(false);
         return;
     }
@@ -190,10 +208,12 @@ export function PostCard({ post, author }: PostCardProps) {
         await updatePost(post.id, {
             content: editedContent,
             imageUrls: editedImageUrls,
+            tags: newTags,
         });
         toast({ title: "Post updated" });
         post.content = editedContent; // Mutate post object for immediate UI update
         post.imageUrls = editedImageUrls;
+        post.tags = newTags;
     } catch (error) {
         toast({ title: "Failed to update post", variant: "destructive" });
     } finally {
@@ -290,6 +310,12 @@ export function PostCard({ post, author }: PostCardProps) {
               <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                 <Textarea value={editedContent} onChange={e => setEditedContent(e.target.value)} className="text-base" />
                 <PostImageGrid imageUrls={editedImageUrls} isEditing={true} onRemoveImage={removeImage} />
+                <Input 
+                    placeholder="Edit tags, e.g. #nextjs #ai"
+                    value={editedTags}
+                    onChange={(e) => setEditedTags(e.target.value)}
+                    className="bg-transparent border-0 border-b-0 focus-visible:ring-0 px-0"
+                />
                 <div className="flex justify-between items-center mt-2 border-t pt-4">
                     <div>
                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" multiple />
@@ -310,6 +336,20 @@ export function PostCard({ post, author }: PostCardProps) {
                 </div>
                 {post.imageUrls && post.imageUrls.length > 0 && (
                     <PostImageGrid imageUrls={post.imageUrls} onImageClick={setViewingImageIndex} />
+                )}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {post.tags.map(tag => (
+                      <Link 
+                        key={tag} 
+                        href={`/search?q=%23${tag}`} 
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        #{tag}
+                      </Link>
+                    ))}
+                  </div>
                 )}
                 <PostActions post={post} />
             </>

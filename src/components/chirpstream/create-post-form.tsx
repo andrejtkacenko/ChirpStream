@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
+import { Input } from "../ui/input";
 
 const MAX_CHARS = {
   free: 280,
@@ -39,6 +40,7 @@ function CreatePostFormSkeleton() {
 export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void }) {
   const { appUser, loading } = useAuth();
   const [content, setContent] = useState("");
+  const [tags, setTags] = useState("");
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -81,10 +83,14 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
   const handleSubmit = async () => {
     if ((!content.trim() && imagePreviews.length === 0) || !appUser || content.length > maxChars) return;
     setIsSubmitting(true);
+    
+    const tagArray = tags.split(/[\s,]+/).filter(Boolean).map(t => t.startsWith('#') ? t.substring(1) : t);
+
     try {
-      await createPost(appUser.id, content, imagePreviews);
+      await createPost(appUser.id, content, tagArray, imagePreviews);
       setContent("");
       setImagePreviews([]);
+      setTags("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -137,6 +143,15 @@ export function CreatePostForm({ onPostCreated }: { onPostCreated: () => void })
             ))}
           </div>
         )}
+        <div className="mt-2">
+            <Input 
+                placeholder="Add tags, e.g. #nextjs #ai"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                disabled={isSubmitting}
+                className="bg-transparent border-0 border-b-0 focus-visible:ring-0 px-0"
+            />
+        </div>
         <div className="flex justify-between items-center mt-2 border-t pt-4">
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" multiple />
             <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSubmitting || imagePreviews.length >= MAX_IMAGES}>

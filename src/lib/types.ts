@@ -30,6 +30,7 @@ export interface Post {
   id:string;
   authorId: string;
   content: string;
+  tags?: string[];
   imageUrls?: string[];
   createdAt: Timestamp | string | { seconds: number, nanoseconds: number }; // Allow all possible shapes
   likes: string[]; // Array of user IDs who liked the post
