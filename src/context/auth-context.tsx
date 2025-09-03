@@ -2,11 +2,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { deleteUserAccount } from '@/lib/data';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -18,6 +19,7 @@ interface AuthContextType {
   logout: (redirect?: boolean) => void;
   switchUser: (user: FirebaseUser) => void;
   refreshAppUser: () => Promise<void>;
+  deleteCurrentUserAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -132,11 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await firebaseSignOut(auth);
     router.push(`/login?email=${encodeURIComponent(targetUser.email || '')}&autoLogin=true`);
   };
-
-  const logout = async (redirect = true) => {
-    const currentUserUid = user?.uid;
-    await firebaseSignOut(auth);
-    
+  
+  const handleLogoutCleanup = (userIdToClear?: string) => {
+    const currentUserUid = userIdToClear || user?.uid;
     // Remove from multi-account list
     const allStoredUsers = JSON.parse(localStorage.getItem('firebase_users') || '[]');
     const remainingUsers = allStoredUsers.filter((u: any) => u.uid !== currentUserUid);
@@ -148,17 +148,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsers([]);
     setAppUsers([]);
 
+    if (remainingUsers.length > 0) {
+        router.push(`/login?email=${encodeURIComponent(remainingUsers[0].email || '')}&autoLogin=true`);
+    } else {
+        localStorage.removeItem('firebase_users');
+        router.push('/login');
+    }
+  }
+
+  const logout = async (redirect = true) => {
+    const currentUserUid = user?.uid;
+    await firebaseSignOut(auth);
     if (redirect) {
-      if (remainingUsers.length > 0) {
-          router.push(`/login?email=${encodeURIComponent(remainingUsers[0].email || '')}&autoLogin=true`);
-      } else {
-          localStorage.removeItem('firebase_users');
-          router.push('/login');
-      }
+      handleLogoutCleanup(currentUserUid);
     }
   };
 
-  const value = { user, appUser, isEmailVerified, users, appUsers, loading, logout, switchUser, refreshAppUser };
+  const deleteCurrentUserAccount = async (password: string) => {
+    if (!user || !user.email) {
+      throw new Error("No user is logged in or user has no email.");
+    }
+    
+    const userId = user.uid;
+
+    // 1. Re-authenticate
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+    
+    // 2. Delete all Firestore data
+    await deleteUserAccount(userId);
+
+    // 3. Delete Firebase Auth user
+    await deleteUser(user);
+
+    // 4. Clean up local state and redirect
+    handleLogoutCleanup(userId);
+  };
+
+
+  const value = { user, appUser, isEmailVerified, users, appUsers, loading, logout, switchUser, refreshAppUser, deleteCurrentUserAccount };
 
   return (
     <AuthContext.Provider value={value}>

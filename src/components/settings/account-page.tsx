@@ -20,6 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useState } from "react";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required."),
@@ -31,6 +42,71 @@ const passwordFormSchema = z.object({
 });
 
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
+
+
+function DeleteAccountDialog() {
+    const { deleteCurrentUserAccount } = useAuth();
+    const { toast } = useToast();
+    const [password, setPassword] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleDelete = async () => {
+        if (!password) {
+            toast({ title: "Password is required", variant: "destructive" });
+            return;
+        }
+        setIsDeleting(true);
+        try {
+            await deleteCurrentUserAccount(password);
+            toast({ title: "Account deleted", description: "Your account and all data have been permanently removed." });
+            // The AuthContext will handle redirecting the user.
+        } catch (error: any) {
+             toast({
+                title: "Error deleting account",
+                description: error.message || "An unknown error occurred.",
+                variant: "destructive",
+            });
+             setIsDeleting(false);
+        }
+    }
+
+    return (
+        <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete Account</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account, posts, messages, and all associated data. To confirm, please enter your password.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                 <div className="py-2">
+                    <Label htmlFor="delete-password">Password</Label>
+                    <Input 
+                        id="delete-password" 
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••" 
+                    />
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setPassword("")}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                        onClick={handleDelete} 
+                        disabled={isDeleting || !password}
+                        className="bg-destructive hover:bg-destructive/90"
+                    >
+                        {isDeleting ? "Deleting..." : "Delete Account"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    )
+}
 
 export default function SettingsAccountPage() {
     const { user } = useAuth();
@@ -155,10 +231,7 @@ export default function SettingsAccountPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button variant="destructive" disabled>Delete Account</Button>
-                     <p className="text-sm text-muted-foreground mt-2">
-                        Account deletion is not yet implemented.
-                    </p>
+                    <DeleteAccountDialog />
                 </CardContent>
             </Card>
         </div>

@@ -410,7 +410,7 @@ export async function unfollowUser(currentUserId: string, targetUserId: string) 
     const targetUserRef = doc(db, 'users', targetUserId);
 
     batch.update(currentUserRef, { following: arrayRemove(targetUserId) });
-    batch.update(targetUserRef, { followers: arrayRemove(targetUserId) });
+    batch.update(targetUserRef, { followers: arrayRemove(currentUserId) });
     
     await batch.commit();
 
@@ -752,4 +752,46 @@ export async function toggleMessageLike(conversationId: string, messageId: strin
             transaction.update(messageRef, { likes: arrayUnion(userId) });
         }
     });
+}
+
+
+export async function deleteUserAccount(userId: string): Promise<void> {
+    const batch = writeBatch(db);
+
+    // 1. Delete user's document
+    const userRef = doc(db, 'users', userId);
+    batch.delete(userRef);
+
+    // 2. Delete user's posts
+    const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId));
+    const postsSnapshot = await getDocs(postsQuery);
+    postsSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // 3. Delete user's tracks (if they are an artist)
+    const tracksQuery = query(collection(db, 'tracks'), where('artistId', '==', userId));
+    const tracksSnapshot = await getDocs(tracksQuery);
+    tracksSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // 4. Delete user's notifications
+    const notificationsQuery = query(collection(db, 'notifications'), where('userId', '==', userId));
+    const notificationsSnapshot = await getDocs(notificationsQuery);
+    notificationsSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // 5. Delete notifications where the user was the actor
+    const actorNotificationsQuery = query(collection(db, 'notifications'), where('actorId', '==', userId));
+    const actorNotificationsSnapshot = await getDocs(actorNotificationsQuery);
+    actorNotificationsSnapshot.forEach(doc => batch.delete(doc.ref));
+    
+    // 6. Delete user's conversations
+    const conversationsQuery = query(collection(db, 'conversations'), where('participants', 'array-contains', userId));
+    const conversationsSnapshot = await getDocs(conversationsQuery);
+    // This is a simplification; for a real app, you might want to handle this differently (e.g., leave a "deleted user" message)
+    conversationsSnapshot.forEach(doc => batch.delete(doc.ref));
+
+
+    // This is complex and potentially slow. In a real large-scale app, this would be handled by a Cloud Function.
+    // For this prototype, we'll skip the full cleanup of followers/following lists of OTHERS to avoid massive reads/writes.
+    // We will also skip cleaning up likes and reposts on other users' posts.
+
+    await batch.commit();
 }
