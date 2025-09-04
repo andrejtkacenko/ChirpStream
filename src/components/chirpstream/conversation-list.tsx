@@ -85,6 +85,51 @@ function NewMessageDialog({ open, onOpenChange, onUserSelected }: { open: boolea
     )
 }
 
+function ConversationListItem({ conversation }: { conversation: Conversation }) {
+    const { appUser } = useAuth();
+    const [timeAgo, setTimeAgo] = useState('');
+    const pathname = usePathname();
+
+    useEffect(() => {
+        const getFormattedTimestamp = () => {
+            const timestamp = conversation.lastMessage?.timestamp;
+            if (!timestamp) return '';
+            const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date((timestamp as any).seconds * 1000);
+            return formatDistanceToNow(date, { addSuffix: true });
+        }
+        setTimeAgo(getFormattedTimestamp());
+    }, [conversation.lastMessage?.timestamp]);
+
+    const otherParticipant = conversation.participantDetails.find(p => p.id !== appUser?.id);
+    if (!otherParticipant) return null;
+
+    const isActive = (convId: string) => pathname === `/messages/${convId}`;
+
+    return (
+        <Link href={`/messages/${conversation.id}`} className={cn("block hover:bg-muted/50 transition-colors", isActive(conversation.id) && "bg-muted")}>
+            <div className="flex items-start gap-4 p-4 border-b">
+                <Avatar className="h-12 w-12">
+                    <AvatarImage src={otherParticipant.avatar} />
+                    <AvatarFallback>{otherParticipant.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="w-full overflow-hidden">
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold truncate">{otherParticipant.name}</span>
+                        <span className="text-muted-foreground truncate">@{otherParticipant.username}</span>
+                        {conversation.lastMessage && <span className="text-muted-foreground text-sm ml-auto shrink-0">{timeAgo}</span>}
+                    </div>
+                    {conversation.lastMessage && (
+                        <p className="text-muted-foreground truncate text-sm">
+                            {conversation.lastMessage.senderId === appUser?.id && 'You: '}
+                            {conversation.lastMessage.text}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </Link>
+    )
+}
+
 export function ConversationList() {
     const { appUser, loading: authLoading } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -92,7 +137,6 @@ export function ConversationList() {
     const [isNewMessageDialogOpen, setIsNewMessageDialogOpen] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
-    const pathname = usePathname();
 
     useEffect(() => {
         if (appUser) {
@@ -102,12 +146,6 @@ export function ConversationList() {
                 .finally(() => setLoading(false));
         }
     }, [appUser]);
-    
-    const getFormattedTimestamp = (timestamp: any) => {
-        if (!timestamp) return '';
-        const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp.seconds * 1000);
-        return formatDistanceToNow(date, { addSuffix: true });
-    }
 
     const handleSelectUser = async (targetUserId: string) => {
         if (!appUser) return;
@@ -137,8 +175,6 @@ export function ConversationList() {
         )
     }
     
-    const isActive = (convId: string) => pathname === `/messages/${convId}`;
-
     return (
         <>
         <main>
@@ -150,34 +186,9 @@ export function ConversationList() {
             </div>
             <div className="flex flex-col">
                 {conversations.length > 0 ? (
-                    conversations.map(conv => {
-                        const otherParticipant = conv.participantDetails.find(p => p.id !== appUser?.id);
-                        if (!otherParticipant) return null;
-
-                        return (
-                            <Link key={conv.id} href={`/messages/${conv.id}`} className={cn("block hover:bg-muted/50 transition-colors", isActive(conv.id) && "bg-muted")}>
-                                <div className="flex items-start gap-4 p-4 border-b">
-                                    <Avatar className="h-12 w-12">
-                                        <AvatarImage src={otherParticipant.avatar} />
-                                        <AvatarFallback>{otherParticipant.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="w-full overflow-hidden">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold truncate">{otherParticipant.name}</span>
-                                            <span className="text-muted-foreground truncate">@{otherParticipant.username}</span>
-                                            {conv.lastMessage && <span className="text-muted-foreground text-sm ml-auto shrink-0">{getFormattedTimestamp(conv.lastMessage.timestamp)}</span>}
-                                        </div>
-                                        {conv.lastMessage && (
-                                            <p className="text-muted-foreground truncate text-sm">
-                                                {conv.lastMessage.senderId === appUser?.id && 'You: '}
-                                                {conv.lastMessage.text}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            </Link>
-                        )
-                    })
+                    conversations.map(conv => (
+                       <ConversationListItem key={conv.id} conversation={conv} />
+                    ))
                 ) : (
                     <p className="text-center text-muted-foreground p-8">You have no messages yet.</p>
                 )}

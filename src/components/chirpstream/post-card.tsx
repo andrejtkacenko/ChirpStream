@@ -20,7 +20,7 @@ import {
 import { deletePost, updatePost } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,20 +153,22 @@ export function PostCard({ post, author }: PostCardProps) {
   const [editedImageUrls, setEditedImageUrls] = useState(post.imageUrls || []);
   const [viewingImageIndex, setViewingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [timeAgo, setTimeAgo] = useState("");
 
-  const getPostDate = () => {
-    if (!post.createdAt) return new Date();
-    if (post.createdAt instanceof Timestamp) {
-      return post.createdAt.toDate();
-    }
-    // Firestore Timestamps can be serialized to an object with seconds and nanoseconds
-    if (typeof post.createdAt === 'object' && 'seconds' in post.createdAt) {
-      return new Timestamp(post.createdAt.seconds, post.createdAt.nanoseconds).toDate();
-    }
-    return new Date(post.createdAt as string);
-  };
+  useEffect(() => {
+    const getPostDate = () => {
+      if (!post.createdAt) return new Date();
+      if (post.createdAt instanceof Timestamp) {
+        return post.createdAt.toDate();
+      }
+      if (typeof post.createdAt === 'object' && 'seconds' in post.createdAt) {
+        return new Timestamp(post.createdAt.seconds, post.createdAt.nanoseconds).toDate();
+      }
+      return new Date(post.createdAt as string);
+    };
+    setTimeAgo(formatDistanceToNow(getPostDate(), { addSuffix: true }));
+  }, [post.createdAt]);
 
-  const timeAgo = formatDistanceToNow(getPostDate(), { addSuffix: true });
   const isAuthor = appUser?.id === author.id;
 
   const handleEditClick = () => {

@@ -33,14 +33,17 @@ function NotificationSkeleton() {
 }
 
 function NotificationItem({ notification }: { notification: Notification }) {
-    const getNotificationDate = () => {
-        if (!notification.createdAt) return new Date();
-        return notification.createdAt instanceof Timestamp 
-            ? notification.createdAt.toDate() 
-            : new Date(notification.createdAt as any);
-    };
+    const [timeAgo, setTimeAgo] = useState('');
 
-    const timeAgo = formatDistanceToNow(getNotificationDate(), { addSuffix: true });
+    useEffect(() => {
+        const getNotificationDate = () => {
+            if (!notification.createdAt) return new Date();
+            return notification.createdAt instanceof Timestamp 
+                ? notification.createdAt.toDate() 
+                : new Date(notification.createdAt as any);
+        };
+        setTimeAgo(formatDistanceToNow(getNotificationDate(), { addSuffix: true }))
+    }, [notification.createdAt]);
 
     if (!notification.actor) return null;
 

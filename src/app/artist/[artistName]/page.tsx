@@ -132,7 +132,7 @@ function ArtistPageContent() {
                                 <span className="text-muted-foreground w-6 text-center">{index + 1}</span>
                                 <Image src={track.cover} alt={track.title} width={40} height={40} className="rounded" />
                                 <span className="font-medium flex-1 truncate">{track.title}</span>
-                                <span className="text-muted-foreground text-sm">{((track.title.length * (index + 1) * 12345) % 10000) / 10}M</span>
+                                <span className="text-muted-foreground text-sm">{((track.title.length * (index + 1) * 12345) % 1000000) / 1000}M</span>
                             </CardContent>
                         </Card>
                     ))}
