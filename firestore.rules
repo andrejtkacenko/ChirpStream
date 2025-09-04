@@ -1,0 +1,40 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow reads for authenticated users, but writes only for the user who owns the data.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Allow reads for authenticated users, but writes only for the post author.
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth.uid == resource.data.authorId;
+    }
+    
+    // Allow reads for authenticated users, writes only for participants
+    match /conversations/{conversationId} {
+      allow read, write: if request.auth.uid in resource.data.participants;
+      
+      // Messages can be created by participants, and read by them.
+      match /messages/{messageId} {
+        allow read, create: if request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+      }
+    }
+    
+    // Allow reads and writes for authenticated users.
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth.uid == resource.data.userId;
+    }
+
+    // Tracks can be read by anyone, but only created/modified by the artist
+    match /tracks/{trackId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth.uid == resource.data.artistId;
+    }
+  }
+}
