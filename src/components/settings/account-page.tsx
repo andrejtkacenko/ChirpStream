@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Label } from "@/components/ui/label";
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required."),

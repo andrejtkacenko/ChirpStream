@@ -276,18 +276,10 @@ export async function getPostWithReplies(postId: string): Promise<{ post: PostWi
     if (!hydratedPost) return null;
 
     const repliesRef = collection(db, 'posts');
-    // The query causing the index issue was here. Now we just filter.
-    const q = query(repliesRef, where('parentPostId', '==', postId));
+    const q = query(repliesRef, where('parentPostId', '==', postId), orderBy('createdAt', 'desc'));
     const repliesSnapshot = await getDocs(q);
     const replies = repliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-
-    // Sort on the client-side
-    replies.sort((a, b) => {
-        const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as string).getTime();
-        const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as string).getTime();
-        return dateB - dateA;
-    });
-
+    
     const hydratedReplies = await hydratePosts(replies);
 
     return {
@@ -444,13 +436,11 @@ export async function searchPosts(searchTerm: string): Promise<PostWithAuthor[]>
     const lowerCaseTerm = cleanedSearchTerm.toLowerCase();
     
     const postsRef = collection(db, 'posts');
-    // The query causing the index issue was here. Now we just filter.
     const q = query(postsRef, where('tags', 'array-contains', lowerCaseTerm), limit(50));
     const snapshot = await getDocs(q);
     
     const postsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
     
-    // Sort on the client-side
     postsList.sort((a, b) => {
         const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt as string).getTime();
         const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt as string).getTime();
