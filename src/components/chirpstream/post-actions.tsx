@@ -19,6 +19,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
 
 export function PostActions({ post }: { post: PostWithAuthor }) {
@@ -274,7 +275,7 @@ export function PostActions({ post }: { post: PostWithAuthor }) {
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>Add to folder</DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
+                          <DropdownMenuSubContent>
                              <DropdownMenuItem onClick={(e) => handleMoveToFolder(e, 'root')}>
                                 Unsorted
                              </DropdownMenuItem>
@@ -289,7 +290,7 @@ export function PostActions({ post }: { post: PostWithAuthor }) {
                                 <FolderPlus className="mr-2 h-4 w-4" />
                                 Create new folder...
                             </DropdownMenuItem>
-                        </DropdownMenuSubContent>
+                          </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
                 </DropdownMenuContent>
@@ -313,3 +314,5 @@ export function PostActions({ post }: { post: PostWithAuthor }) {
     </div>
   );
 }
+
+    
