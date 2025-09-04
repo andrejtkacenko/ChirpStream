@@ -1,3 +1,4 @@
+
 # ChirpStream: A Modern Social Media & Music Platform
 
 This project, built in Firebase Studio, is a full-featured social media application named **ChirpStream**. It combines the core functionalities of a social network like Twitter with music discovery and streaming features reminiscent of Spotify.

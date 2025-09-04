@@ -39,7 +39,7 @@ const plans = [
         "Everything in Premium, and...",
         "No ads in For You and Following feeds",
         "Largest reply boost",
-        "Grok with increased limits",
+        "Advanced content creation tools",
         "X Pro, Analytics, Media Studio",
         "Creator Subscriptions",
         "Longer Posts (4,000 chars)",
