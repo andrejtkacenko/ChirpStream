@@ -145,7 +145,7 @@ function PostPageContent() {
                 <h1 className="text-xl font-bold">Post</h1>
             </header>
             
-            <PostCard post={post} author={post.author} />
+            <PostCard post={post} />
             <ReplyForm parentPost={post} onReplyPosted={loadPostData} />
             
             <Separator />
@@ -153,7 +153,7 @@ function PostPageContent() {
             {replies.length > 0 && (
                 <div className="flex flex-col">
                     {replies.map(reply => (
-                        <PostCard key={reply.id} post={reply} author={reply.author} />
+                        <PostCard key={reply.id} post={reply} />
                     ))}
                 </div>
             )}
