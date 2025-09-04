@@ -3,7 +3,7 @@
 
 import { MainLayout } from "@/components/layout/main-layout";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { MessagesPageContent } from "./page";
+import { ConversationList } from "./page";
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,15 +13,15 @@ function MessagesLayoutContent({ children }: { children: ReactNode }) {
     const isConversationOpen = pathname.includes('/messages/') && pathname !== '/messages';
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 h-full">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr,2fr] h-full">
             <aside className={cn(
                 "border-r h-full overflow-y-auto",
                 isConversationOpen && "hidden md:block"
             )}>
-                <MessagesPageContent />
+                <ConversationList />
             </aside>
             <main className={cn(
-                "h-full md:col-span-2",
+                "h-full",
                  !isConversationOpen && "hidden md:block"
             )}>
                 {children}

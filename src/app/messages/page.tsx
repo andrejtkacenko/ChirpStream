@@ -86,7 +86,7 @@ function NewMessageDialog({ open, onOpenChange, onUserSelected }: { open: boolea
     )
 }
 
-export function MessagesPageContent() {
+export function ConversationList() {
     const { appUser, loading: authLoading } = useAuth();
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -193,7 +193,7 @@ export function MessagesPageContent() {
     )
 }
 
-export default function MessagesRootPage() {
+export default function MessagesPage() {
     return (
         <div className="hidden md:flex flex-col items-center justify-center h-full text-center p-4">
             <h2 className="text-2xl font-bold">Select a message</h2>
