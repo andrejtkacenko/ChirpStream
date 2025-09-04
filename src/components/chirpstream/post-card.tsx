@@ -153,6 +153,11 @@ export function PostCard({ post }: PostCardProps) {
   const [viewingImageIndex, setViewingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [timeAgo, setTimeAgo] = useState("");
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const author = post.author;
 
@@ -377,31 +382,33 @@ export function PostCard({ post }: PostCardProps) {
         </AlertDialogContent>
       </AlertDialog>
       
-      <Dialog open={viewingImageIndex !== null} onOpenChange={() => setViewingImageIndex(null)}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0 border-0 bg-transparent flex items-center justify-center" onInteractOutside={(e) => e.stopPropagation()}>
-            <DialogTitle className="sr-only">Viewing image</DialogTitle>
-            {viewingImageUrl && (
-                <div className="relative w-full h-full">
-                    <Image 
-                        src={viewingImageUrl} 
-                        alt="Full screen image view"
-                        fill
-                        className="object-contain"
-                    />
-                </div>
-            )}
-            {post.imageUrls && post.imageUrls.length > 1 && (
-              <>
-                <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handlePrevImage}>
-                    <ChevronLeft className="h-8 w-8" />
-                </Button>
-                <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handleNextImage}>
-                    <ChevronRight className="h-8 w-8" />
-                </Button>
-              </>
-            )}
-        </DialogContent>
-      </Dialog>
+      {isClient && (
+        <Dialog open={viewingImageIndex !== null} onOpenChange={() => setViewingImageIndex(null)}>
+            <DialogContent className="max-w-4xl h-[90vh] p-0 border-0 bg-transparent flex items-center justify-center" onInteractOutside={(e) => e.stopPropagation()}>
+                <DialogTitle className="sr-only">Viewing image</DialogTitle>
+                {viewingImageUrl && (
+                    <div className="relative w-full h-full">
+                        <Image 
+                            src={viewingImageUrl} 
+                            alt="Full screen image view"
+                            fill
+                            className="object-contain"
+                        />
+                    </div>
+                )}
+                {post.imageUrls && post.imageUrls.length > 1 && (
+                <>
+                    <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handlePrevImage}>
+                        <ChevronLeft className="h-8 w-8" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/20 hover:bg-black/40 text-white" onClick={handleNextImage}>
+                        <ChevronRight className="h-8 w-8" />
+                    </Button>
+                </>
+                )}
+            </DialogContent>
+        </Dialog>
+      )}
 
     </Card>
   );
