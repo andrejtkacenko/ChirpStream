@@ -1,5 +1,5 @@
 
-import { Timestamp } from "firebase/firestore";
+import { FieldValue, Timestamp } from "firebase/firestore";
 
 export interface User {
   id: string;
@@ -32,7 +32,7 @@ export interface Post {
   content: string;
   tags?: string[];
   imageUrls?: string[];
-  createdAt: Timestamp | string | { seconds: number, nanoseconds: number }; // Allow all possible shapes
+  createdAt: Timestamp | string | { seconds: number, nanoseconds: number } | FieldValue; // Allow all possible shapes
   likes: string[]; // Array of user IDs who liked the post
   reposts: number;
   replies: number;
@@ -87,5 +87,5 @@ export interface Track {
   artistUsername: string; // Artist's username for linking
   cover: string; // URL to cover art
   audioUrl: string; // URL to the audio file
-  createdAt: Timestamp | { seconds: number, nanoseconds: number } | string;
+  createdAt: Timestamp | { seconds: number, nanoseconds: number } | string | FieldValue;
 }

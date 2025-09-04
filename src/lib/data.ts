@@ -1,6 +1,6 @@
 
 
-import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, writeBatch, documentId, collectionGroup, Timestamp, onSnapshot, runTransaction, increment, FieldValue } from 'firebase/firestore';
 import { db } from './firebase';
 import type { User, Post, PostWithAuthor, Conversation, Message, Notification, Track } from './types';
 
@@ -642,17 +642,19 @@ export async function markNotificationsAsRead(userId: string): Promise<void> {
 export async function addTrack({ artistId, artistName, artistUsername, trackName }: { artistId: string, artistName: string, artistUsername: string, trackName: string }): Promise<string> {
     const tracksCol = collection(db, 'tracks');
     
-    const newTrack: Omit<Track, 'id'> = {
+    const newTrackData = {
         artistId,
         artist: artistName,
         artistUsername,
         title: trackName,
         cover: `https://picsum.photos/seed/${trackName.replace(/\s+/g, '')}/400/400`, // Use track name for a unique-ish seed
         audioUrl: "https://storage.googleapis.com/studiostoragetest/Lullaby.mp3", // Placeholder audio
-        createdAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(tracksCol, newTrack);
+    const docRef = await addDoc(tracksCol, {
+        ...newTrackData,
+        createdAt: serverTimestamp(),
+    });
     return docRef.id;
 }
 
