@@ -3,7 +3,7 @@
 
 import { MainLayout } from "@/components/layout/main-layout";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { ConversationList } from "./page";
+import { ConversationList } from "@/components/chirpstream/conversation-list";
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
