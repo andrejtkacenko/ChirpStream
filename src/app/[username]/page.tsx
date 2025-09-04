@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -93,7 +94,7 @@ function ProfilePageContent() {
       <h2 className="text-xl font-bold mb-4">Posts</h2>
       <div className="flex flex-col gap-6">
         {userPosts.map((post) => (
-          <PostCard key={post.id} post={post} author={post.author} />
+          <PostCard key={post.id} post={post} />
         ))}
         {userPosts.length === 0 && (
           <p className="text-muted-foreground text-center py-8">This user hasn't posted anything yet.</p>

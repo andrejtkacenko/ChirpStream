@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { CreatePostForm } from "@/components/chirpstream/create-post-form";
@@ -58,7 +59,7 @@ function HomePageContent() {
           <div className="flex flex-col">
             {feedPosts.length > 0 ? (
               feedPosts.map((post) => (
-                  <PostCard key={post.id} post={post} author={post.author} />
+                  <PostCard key={post.id} post={post} />
               ))
             ) : (
               <p className="text-muted-foreground text-center p-8">

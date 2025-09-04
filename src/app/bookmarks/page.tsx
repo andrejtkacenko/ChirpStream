@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
@@ -102,7 +103,7 @@ function CreateFolderDialog({ open, onOpenChange, onFolderCreated }: { open: boo
     )
 }
 
-function PostWithBookmarkActions({ post, author }: { post: PostWithAuthor; author: User }) {
+function PostWithBookmarkActions({ post }: { post: PostWithAuthor }) {
   const { appUser, refreshAppUser } = useAuth();
   const { toast } = useToast();
 
@@ -129,11 +130,11 @@ function PostWithBookmarkActions({ post, author }: { post: PostWithAuthor; autho
   }
 
   const isPremium = appUser?.plan === 'premium' || appUser?.plan === 'premium_plus';
-  if (!isPremium) return <PostCard post={post} author={author} />;
+  if (!isPremium) return <PostCard post={post} />;
 
   return (
     <div className="relative group">
-       <PostCard post={post} author={author} />
+       <PostCard post={post} />
        <div className="absolute top-2 right-14 opacity-0 group-hover:opacity-100 transition-opacity">
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -230,14 +231,14 @@ function BookmarksPageContent() {
                     ))}
                 </TabsList>
                  <TabsContent value="all">
-                    {bookmarkedPosts.map((post) => <PostWithBookmarkActions key={post.id} post={post} author={post.author} />)}
+                    {bookmarkedPosts.map((post) => <PostWithBookmarkActions key={post.id} post={post} />)}
                  </TabsContent>
                  <TabsContent value="unsorted">
-                    {unsortedPosts.map((post) => <PostWithBookmarkActions key={post.id} post={post} author={post.author} />)}
+                    {unsortedPosts.map((post) => <PostWithBookmarkActions key={post.id} post={post} />)}
                  </TabsContent>
                  {appUser?.bookmarkFolders?.map(folder => (
                      <TabsContent key={folder.id} value={folder.id}>
-                        {(postsByFolder[folder.id] || []).map((post) => <PostWithBookmarkActions key={post.id} post={post} author={post.author} />)}
+                        {(postsByFolder[folder.id] || []).map((post) => <PostWithBookmarkActions key={post.id} post={post} />)}
                      </TabsContent>
                  ))}
             </Tabs>
@@ -245,7 +246,7 @@ function BookmarksPageContent() {
              bookmarkedPosts.length > 0 ? (
               <div className="flex flex-col">
                 {bookmarkedPosts.map((post) => (
-                  <PostCard key={post.id} post={post} author={post.author} />
+                  <PostCard key={post.id} post={post} />
                 ))}
               </div>
             ) : (

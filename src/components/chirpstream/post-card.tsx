@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Post, User, PostWithAuthor } from "@/lib/types";
+import type { PostWithAuthor } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { PostActions } from "./post-actions";
@@ -41,7 +41,6 @@ import { Input } from "../ui/input";
 
 type PostCardProps = {
   post: PostWithAuthor;
-  author: User; // Author is now part of the post prop, but we keep it for consistency
 };
 
 const MAX_IMAGES = 4;
@@ -142,7 +141,7 @@ const PostImageGrid = ({
 };
 
 
-export function PostCard({ post, author }: PostCardProps) {
+export function PostCard({ post }: PostCardProps) {
   const { appUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -154,6 +153,8 @@ export function PostCard({ post, author }: PostCardProps) {
   const [viewingImageIndex, setViewingImageIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [timeAgo, setTimeAgo] = useState("");
+
+  const author = post.author;
 
   useEffect(() => {
     const getPostDate = () => {

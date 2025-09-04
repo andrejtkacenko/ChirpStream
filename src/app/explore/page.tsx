@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState, useCallback, Suspense, useMemo } from "react";
@@ -219,7 +220,7 @@ function ExplorePageContent() {
                 <div className="flex flex-col">
                     {posts.length > 0 ? (
                     posts.map(post => (
-                        <PostCard key={post.id} post={post} author={post.author} />
+                        <PostCard key={post.id} post={post} />
                     ))
                     ) : (
                     <p className="text-muted-foreground text-center py-8">No posts found matching your search.</p>
@@ -275,7 +276,7 @@ function ExplorePageContent() {
                   {loading ? <FeedSkeleton /> : (
                   <div className="flex flex-col">
                       {posts.map((post) => (
-                      <PostCard key={post.id} post={post} author={post.author} />
+                      <PostCard key={post.id} post={post} />
                       ))}
                   </div>
                   )}
@@ -284,7 +285,7 @@ function ExplorePageContent() {
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
                         {trendingPosts.map((post) => (
-                        <PostCard key={post.id} post={post} author={post.author} />
+                        <PostCard key={post.id} post={post} />
                         ))}
                     </div>
                   )}
@@ -293,7 +294,7 @@ function ExplorePageContent() {
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
                         {newsPosts.map((post) => (
-                        <PostCard key={post.id} post={post} author={post.author} />
+                        <PostCard key={post.id} post={post} />
                         ))}
                     </div>
                   )}
@@ -302,7 +303,7 @@ function ExplorePageContent() {
                   {loading ? <FeedSkeleton /> : (
                     <div className="flex flex-col">
                         {sportsPosts.map((post) => (
-                        <PostCard key={post.id} post={post} author={post.author} />
+                        <PostCard key={post.id} post={post} />
                         ))}
                     </div>
                   )}
