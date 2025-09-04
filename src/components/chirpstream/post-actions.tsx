@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Repeat, Share, Bookmark, FolderPlus } from "lucide-react";
-import type { Post } from "@/lib/types";
+import type { Post, PostWithAuthor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { toggleBookmark, movePostToBookmarkFolder, toggleLike, repostPost } from "@/lib/data";
@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-export function PostActions({ post }: { post: Post }) {
+export function PostActions({ post }: { post: PostWithAuthor }) {
   const { appUser, refreshAppUser } = useAuth();
   const { toast } = useToast();
   const router = useRouter();

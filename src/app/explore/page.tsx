@@ -209,7 +209,6 @@ function ExplorePageContent() {
       {query ? (
         // Search Results View
         <div className="p-4 md:p-6">
-          <p className="text-muted-foreground mb-4">Showing results for "{query}"</p>
           <Tabs defaultValue="posts" className="mt-4">
             <TabsList>
               <TabsTrigger value="posts">Posts ({posts.length})</TabsTrigger>

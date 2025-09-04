@@ -344,7 +344,7 @@ export function PostCard({ post, author }: PostCardProps) {
                     {post.tags.map(tag => (
                       <Link 
                         key={tag} 
-                        href={`/search?q=%23${tag}`} 
+                        href={`/explore?q=%23${tag}`} 
                         onClick={(e) => e.stopPropagation()}
                         className="text-sm text-primary hover:underline"
                       >
