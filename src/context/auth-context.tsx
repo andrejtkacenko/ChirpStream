@@ -2,12 +2,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut, EmailAuthProvider, reauthenticateWithCredential, deleteUser, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { deleteUserAccount } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -44,7 +45,14 @@ async function getOrCreateAppUser(firebaseUser: FirebaseUser): Promise<User> {
             followers: [],
             plan: 'free',
             isArtist: false,
+            hasSeenStudioNotification: true,
             bookmarks: [],
+            notificationSettings: {
+                newFollowers: true,
+                postLikes: true,
+                postReplies: true,
+                directMessages: true
+            }
         };
         await setDoc(userRef, newUser);
         return newUser;
@@ -59,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [appUsers, setAppUsers] = useState<(User | null)[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   const fetchAppUserData = async (firebaseUser: FirebaseUser) => {
     const appUserData = await getOrCreateAppUser(firebaseUser);
@@ -67,15 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Logic for multiple accounts
     const storedUsersRaw = localStorage.getItem('firebase_users') || '[]';
-    const storedUsers = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+    let storedUsers: any[] = [];
+    try {
+        storedUsers = JSON.parse(storedUsersRaw);
+    } catch {
+        storedUsers = [];
+    }
+    
     const userExists = storedUsers.some((u: any) => u.uid === firebaseUser.uid);
 
     if (!userExists) {
+        const providerId = firebaseUser.providerData[0]?.providerId || 'password';
         storedUsers.push({ 
             uid: firebaseUser.uid, 
             email: firebaseUser.email, 
             displayName: firebaseUser.displayName, 
-            photoURL: firebaseUser.photoURL 
+            photoURL: firebaseUser.photoURL,
+            providerId,
         });
         localStorage.setItem('firebase_users', JSON.stringify(storedUsers));
     }
@@ -130,9 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const switchUser = async (targetUser: FirebaseUser) => {
-    setLoading(true);
-    await firebaseSignOut(auth);
-    router.push(`/login?email=${encodeURIComponent(targetUser.email || '')}&autoLogin=true`);
+      setLoading(true);
+      toast({ title: `Switching to ${targetUser.displayName}...`});
+      await firebaseSignOut(auth);
+      router.push(`/login?email=${encodeURIComponent(targetUser.email || '')}&autoLogin=true`);
   };
   
   const handleLogoutCleanup = (userIdToClear?: string) => {
@@ -149,6 +167,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAppUsers([]);
 
     if (remainingUsers.length > 0) {
+        // This is not a perfect solution as it assumes the next user is email/pass.
+        // A full implementation would require more robust session management.
+        // For this prototype, redirecting to login is a safe default.
         router.push(`/login?email=${encodeURIComponent(remainingUsers[0].email || '')}&autoLogin=true`);
     } else {
         localStorage.removeItem('firebase_users');

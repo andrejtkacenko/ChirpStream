@@ -8,8 +8,9 @@ import type { User } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { followUser, unfollowUser, updateUserPlan, findOrCreateConversation } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Mail, Pencil } from "lucide-react";
+import { Crown, Mail, Pencil, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SettingsDialog } from "../settings/settings-dialog";
 
 
 type UserProfileCardProps = {
@@ -82,10 +83,12 @@ export function UserProfileCard({ user, postCount }: UserProfileCardProps) {
   const renderActionButtons = () => {
     if (isCurrentUser) {
         return (
-            <Button variant="outline" onClick={() => router.push('/settings/profile')}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Profile
-            </Button>
+            <SettingsDialog>
+                <Button variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Profile
+                </Button>
+            </SettingsDialog>
         )
     } else {
         return (
